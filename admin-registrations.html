@@ -30,7 +30,7 @@
         <table>
           <thead><tr>
             <th>#</th><th>Full Name</th><th>Age</th><th>Gender</th>
-            <th>Contact</th><th>Email</th><th>Address</th><th>Church</th><th>Cell Group</th>
+            <th>Contact</th><th>Email</th><th>Address</th><th>Church</th><th>Cell Group</th><th>Church Duration</th>
             <th>Event</th><th>Emergency Contact</th><th>Medical</th><th>Reg. Date</th><th>Actions</th>
           </tr></thead>
           <tbody id="regBody"><tr><td colspan="14" style="text-align:center;color:var(--white-dim);padding:2rem">No registrations yet</td></tr></tbody>
@@ -100,7 +100,8 @@
           <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.address||''}">${r.address||'—'}</td>
           <td>${r.church_name||'—'}</td>
           <td>${r.pastor_name||'—'}</td>
-          <td>${r.event_name||'—'}</td>
+        <td>${r.church_phone||'—'}</td>
+        <td>${r.event_name||'—'}</td>
           <td>${r.emergency_contact_name||'—'} (${r.emergency_contact_phone||'—'})</td>
           <td>${r.medical_conditions||'—'}</td>
           <td>${new Date(r.registered_at).toLocaleDateString()}</td>
@@ -149,7 +150,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.9rem">
         ${[
           ['Age', r.age||'—'], ['Gender', r.gender||'—'], ['Contact', r.phone||'—'], ['Email', r.email||'—'],
-          ['Church', r.church_name||'—'], ['Pastor', r.pastor_name||'—'], ['Event', r.event_name||'—'],
+          ['Church', r.church_name||'—'], ['Cell Group', r.pastor_name||'—'], ['Church Attendance', r.church_phone||'—'], ['Event', r.event_name||'—'],
           ['Emergency Contact', (r.emergency_contact_name||'—')+' ('+( r.emergency_contact_phone||'—')+')'],
           ['Relationship', r.emergency_contact_relation||'—'], ['Registered', new Date(r.registered_at).toLocaleString()]
         ].map(([k,v])=>`<div><div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">${k}</div><div>${v}</div></div>`).join('')}
