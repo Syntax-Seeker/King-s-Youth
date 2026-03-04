@@ -14,7 +14,10 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'greater2025_secret_change_in_production';
 
 // ── Middleware ─────────────────────────────────
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false
+}));
 app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
 app.use(express.json({ limit: '20mb' })); // large for base64 images
 app.use(express.static('public')); // serve HTML files
