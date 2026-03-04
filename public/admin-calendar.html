@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | Admin — Calendar</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="page-wrap">
+<div class="admin-layout">
+  <div id="admin-nav-root"></div>
+  <main class="admin-content">
+    <div class="admin-top">
+      <h2 class="admin-page-title">Event Calendar</h2>
+      <a href="admin-events.html" class="btn btn-primary">+ Schedule Event</a>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+      <span style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--white-dim)"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--blue)"></span>Open</span>
+      <span style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--white-dim)"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:#8b5cf6"></span>Upcoming</span>
+      <span style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;color:var(--white-dim)"><span style="display:inline-block;width:12px;height:12px;border-radius:2px;background:var(--border)"></span>Closed</span>
+    </div>
+
+    <div class="calendar-wrap" id="calWrap"></div>
+
+    <!-- Selected day events -->
+    <div id="dayPanel" style="display:none;margin-top:1.5rem;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem">
+      <h3 style="font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:1px;margin-bottom:1rem" id="dayTitle"></h3>
+      <div id="dayEvents"></div>
+    </div>
+  </main>
+</div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  requireAdmin();
+  fetch('admin-nav.html').then(r=>r.text()).then(h=>{
+    document.getElementById('admin-nav-root').innerHTML=h;
+    document.querySelectorAll('.admin-nav-item[data-page]').forEach(a=>{ a.classList.toggle('active', a.dataset.page==='admin-calendar.html'); });
+  });
+
+  let calDate = new Date();
+  let calEvents = [];
+  const STATUS_COLORS = { open:'var(--blue)', upcoming:'#8b5cf6', closed:'var(--border)' };
+
+  async function loadAndRender() {
+    try { calEvents = await Events.getAll(); } catch(e) { calEvents = []; }
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const year=calDate.getFullYear(), month=calDate.getMonth();
+    const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const firstDay=new Date(year,month,1).getDay();
+    const daysInMonth=new Date(year,month+1,0).getDate();
+    const today=new Date();
+
+    let html=`<div class="cal-header">
+      <div class="cal-title">${MONTHS[month]} ${year}</div>
+      <div class="cal-nav">
+        <button onclick="calNav(-1)">‹</button>
+        <button onclick="calToday()">Today</button>
+        <button onclick="calNav(1)">›</button>
+      </div>
+    </div><div class="cal-grid">
+    ${DAYS.map(d=>`<div class="cal-day-label">${d}</div>`).join('')}`;
+
+    const prevDays=new Date(year,month,0).getDate();
+    for(let i=firstDay-1;i>=0;i--) html+=`<div class="cal-cell other-month"><div class="cal-date">${prevDays-i}</div></div>`;
+
+    for(let day=1;day<=daysInMonth;day++){
+      const isToday=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===day;
+      const ds=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const evs=calEvents.filter(e=>e.date===ds||(e.end_date&&e.date<=ds&&e.end_date>=ds));
+      html+=`<div class="cal-cell${isToday?' today':''}" onclick="showDay('${ds}')">
+        <div class="cal-date">${day}</div>
+        ${evs.map(e=>`<div class="cal-event-dot" style="background:${STATUS_COLORS[e.status]||'var(--blue)'}">${e.name}</div>`).join('')}
+      </div>`;
+    }
+
+    const rem=(7-(firstDay+daysInMonth)%7)%7;
+    for(let i=1;i<=rem;i++) html+=`<div class="cal-cell other-month"><div class="cal-date">${i}</div></div>`;
+    html+='</div>';
+    document.getElementById('calWrap').innerHTML=html;
+  }
+
+  function calNav(dir) { calDate.setMonth(calDate.getMonth()+dir); renderCalendar(); }
+  function calToday()  { calDate=new Date(); renderCalendar(); }
+
+  function showDay(ds) {
+    const evs=calEvents.filter(e=>e.date===ds||(e.end_date&&e.date<=ds&&e.end_date>=ds));
+    const panel=document.getElementById('dayPanel');
+    const d=new Date(ds+'T00:00:00');
+    document.getElementById('dayTitle').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    if (!evs.length) {
+      document.getElementById('dayEvents').innerHTML='<p style="color:var(--white-dim);font-size:.9rem">No events on this day. <a href="admin-events.html" style="color:var(--accent)">Create one →</a></p>';
+    } else {
+      document.getElementById('dayEvents').innerHTML=evs.map(ev=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;background:var(--deep);border:1px solid var(--border);border-radius:8px;margin-bottom:.5rem">
+          <div>
+            <strong>${ev.name}</strong>
+            <div style="font-size:.82rem;color:var(--white-dim)">📍 ${ev.location} ${ev.time?'· ⏰ '+ev.time:''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span class="status-badge status-${ev.status}">${ev.status}</span>
+            <a href="admin-events.html" class="action-btn">Edit</a>
+          </div>
+        </div>
+      `).join('');
+    }
+    panel.style.display='block';
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+
+  loadAndRender();
+</script>
+</body>
+</html>
