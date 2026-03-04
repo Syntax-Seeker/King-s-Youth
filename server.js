@@ -1,0 +1,393 @@
+// =============================================
+//  KING-YOUTH | GREATER — Node.js/Express API
+// =============================================
+const express    = require('express');
+const mysql      = require('mysql2/promise');
+const bcrypt     = require('bcrypt');
+const jwt        = require('jsonwebtoken');
+const cors       = require('cors');
+const helmet     = require('helmet');
+require('dotenv').config();
+
+const app  = express();
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'greater2025_secret_change_in_production';
+
+// ── Middleware ─────────────────────────────────
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
+app.use(express.json({ limit: '20mb' })); // large for base64 images
+app.use(express.static('public')); // serve HTML files
+
+// ── DB Pool ────────────────────────────────────
+const db = mysql.createPool({
+  host:     process.env.DB_HOST     || 'localhost',
+  port:     process.env.DB_PORT     || 3306,
+  user:     process.env.DB_USER     || 'root',
+  password: process.env.DB_PASS     || '',
+  database: process.env.DB_NAME     || 'kingyouth',
+  waitForConnections: true,
+  connectionLimit: 10,
+  charset: 'utf8mb4'
+});
+
+// ── Auth Middleware ────────────────────────────
+function authRequired(req, res, next) {
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    req.admin = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+// ─────────────────────────────────────────────
+//  AUTH ROUTES
+// ─────────────────────────────────────────────
+
+// POST /api/auth/login
+app.post('/api/auth/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
+  try {
+    const [rows] = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
+    if (!rows.length) return res.status(401).json({ error: 'Invalid credentials' });
+    const match = await bcrypt.compare(password, rows[0].password_hash);
+    if (!match) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = jwt.sign({ id: rows[0].id, username: rows[0].username }, JWT_SECRET, { expiresIn: '8h' });
+    res.json({ token, username: rows[0].username });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/auth/change-password
+app.post('/api/auth/change-password', authRequired, async (req, res) => {
+  const { currentPassword, newUsername, newPassword } = req.body;
+  try {
+    const [rows] = await db.query('SELECT * FROM admins WHERE id = ?', [req.admin.id]);
+    const match = await bcrypt.compare(currentPassword, rows[0].password_hash);
+    if (!match) return res.status(401).json({ error: 'Current password incorrect' });
+    const hash = await bcrypt.hash(newPassword, 10);
+    await db.query('UPDATE admins SET username=?, password_hash=? WHERE id=?',
+      [newUsername || rows[0].username, hash, req.admin.id]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+//  EVENTS ROUTES
+// ─────────────────────────────────────────────
+
+// GET /api/events
+app.get('/api/events', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM events ORDER BY date ASC');
+    res.json(rows.map(parseJSON(['media'])));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/events/:id
+app.get('/api/events/:id', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM events WHERE id=?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(parseJSON(['media'])(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/events (admin only)
+app.post('/api/events', authRequired, async (req, res) => {
+  const { name, date, end_date, time, deadline, location, description, max_participants, fee, status, media } = req.body;
+  try {
+    const [result] = await db.query(
+      `INSERT INTO events (name,date,end_date,time,deadline,location,description,max_participants,fee,status,media)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      [name, date, end_date||null, time, deadline||null, location, description,
+       max_participants||100, fee||0, status||'upcoming', JSON.stringify(media||[])]
+    );
+    const [rows] = await db.query('SELECT * FROM events WHERE id=?', [result.insertId]);
+    res.status(201).json(parseJSON(['media'])(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/events/:id (admin only)
+app.put('/api/events/:id', authRequired, async (req, res) => {
+  const { name, date, end_date, time, deadline, location, description, max_participants, fee, status, media } = req.body;
+  try {
+    await db.query(
+      `UPDATE events SET name=?,date=?,end_date=?,time=?,deadline=?,location=?,description=?,
+       max_participants=?,fee=?,status=?,media=? WHERE id=?`,
+      [name, date, end_date||null, time, deadline||null, location, description,
+       max_participants||100, fee||0, status||'upcoming', JSON.stringify(media||[]), req.params.id]
+    );
+    const [rows] = await db.query('SELECT * FROM events WHERE id=?', [req.params.id]);
+    res.json(parseJSON(['media'])(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/events/:id (admin only)
+app.delete('/api/events/:id', authRequired, async (req, res) => {
+  try {
+    await db.query('DELETE FROM events WHERE id=?', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/events/:id/registration-count
+app.get('/api/events/:id/registration-count', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT COUNT(*) as count FROM registrations WHERE event_id=?', [req.params.id]);
+    res.json({ count: rows[0].count });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─────────────────────────────────────────────
+//  REGISTRATIONS ROUTES
+// ─────────────────────────────────────────────
+
+// GET /api/registrations (admin only)
+app.get('/api/registrations', authRequired, async (req, res) => {
+  try {
+    const { event_id } = req.query;
+    let sql = `SELECT r.*, e.name as event_name FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id`;
+    const params = [];
+    if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
+    sql += ' ORDER BY r.registered_at DESC';
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/registrations (public)
+app.post('/api/registrations', async (req, res) => {
+  const f = req.body;
+  try {
+    // Capacity check
+    if (f.event_id) {
+      const [ev] = await db.query('SELECT max_participants FROM events WHERE id=?', [f.event_id]);
+      const [cnt] = await db.query('SELECT COUNT(*) as c FROM registrations WHERE event_id=?', [f.event_id]);
+      if (ev.length && cnt[0].c >= ev[0].max_participants) {
+        return res.status(409).json({ error: 'This event is full' });
+      }
+    }
+    const [result] = await db.query(
+      `INSERT INTO registrations
+       (event_id,first_name,last_name,age,gender,phone,email,address,city,province,postal_code,
+        church_name,pastor_name,church_phone,emergency_contact_name,emergency_contact_phone,
+        emergency_contact_relation,medical_conditions,consent_liability,consent_photo,consent_rules)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [f.event_id||null, f.first_name, f.last_name, f.age||null, f.gender, f.phone, f.email,
+       f.address, f.city, f.province, f.postal_code, f.church_name, f.pastor_name, f.church_phone,
+       f.emergency_contact_name, f.emergency_contact_phone, f.emergency_contact_relation,
+       f.medical_conditions||'', f.consent_liability?1:0, f.consent_photo?1:0, f.consent_rules?1:0]
+    );
+    res.status(201).json({ id: result.insertId, success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/registrations/:id (admin only)
+app.delete('/api/registrations/:id', authRequired, async (req, res) => {
+  try {
+    await db.query('DELETE FROM registrations WHERE id=?', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/registrations/export — CSV download (admin only)
+app.get('/api/registrations/export', authRequired, async (req, res) => {
+  try {
+    const { event_id } = req.query;
+    let sql = `SELECT r.*, e.name as event_name FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id`;
+    const params = [];
+    if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
+    const [rows] = await db.query(sql, params);
+    const cols = ['id','event_name','first_name','last_name','age','gender','phone','email',
+                  'address','city','province','postal_code','church_name','pastor_name','church_phone',
+                  'emergency_contact_name','emergency_contact_phone','emergency_contact_relation',
+                  'medical_conditions','consent_liability','consent_photo','consent_rules','registered_at'];
+    const csv = [cols.join(','), ...rows.map(r =>
+      cols.map(c => `"${String(r[c]??'').replace(/"/g,'""')}"`).join(',')
+    )].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="registrations_${Date.now()}.csv"`);
+    res.send(csv);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─────────────────────────────────────────────
+//  PRODUCTS ROUTES
+// ─────────────────────────────────────────────
+
+// GET /api/products
+app.get('/api/products', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM products ORDER BY created_at DESC');
+    res.json(rows.map(parseJSON(['sizes','images'])));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/products (admin only)
+app.post('/api/products', authRequired, async (req, res) => {
+  const { name, description, price, stock, sizes, category, images } = req.body;
+  try {
+    const [result] = await db.query(
+      `INSERT INTO products (name,description,price,stock,sizes,category,images)
+       VALUES (?,?,?,?,?,?,?)`,
+      [name, description, price, stock||0, JSON.stringify(sizes||[]), category, JSON.stringify(images||[])]
+    );
+    const [rows] = await db.query('SELECT * FROM products WHERE id=?', [result.insertId]);
+    res.status(201).json(parseJSON(['sizes','images'])(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/products/:id (admin only)
+app.put('/api/products/:id', authRequired, async (req, res) => {
+  const { name, description, price, stock, sizes, category, images } = req.body;
+  try {
+    await db.query(
+      `UPDATE products SET name=?,description=?,price=?,stock=?,sizes=?,category=?,images=? WHERE id=?`,
+      [name, description, price, stock||0, JSON.stringify(sizes||[]), category, JSON.stringify(images||[]), req.params.id]
+    );
+    const [rows] = await db.query('SELECT * FROM products WHERE id=?', [req.params.id]);
+    res.json(parseJSON(['sizes','images'])(rows[0]));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/products/:id (admin only)
+app.delete('/api/products/:id', authRequired, async (req, res) => {
+  try {
+    await db.query('DELETE FROM products WHERE id=?', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─────────────────────────────────────────────
+//  ORDERS ROUTES
+// ─────────────────────────────────────────────
+
+// GET /api/orders (admin only)
+app.get('/api/orders', authRequired, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM orders ORDER BY ordered_at DESC');
+    res.json(rows.map(parseJSON(['items'])));
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/orders (public)
+app.post('/api/orders', async (req, res) => {
+  const { customer_name, customer_email, customer_phone, customer_address, items, total } = req.body;
+  try {
+    const [result] = await db.query(
+      `INSERT INTO orders (customer_name,customer_email,customer_phone,customer_address,items,total)
+       VALUES (?,?,?,?,?,?)`,
+      [customer_name, customer_email, customer_phone, customer_address, JSON.stringify(items), total]
+    );
+    res.status(201).json({ id: result.insertId, success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/orders/:id/status (admin only)
+app.put('/api/orders/:id/status', authRequired, async (req, res) => {
+  try {
+    await db.query('UPDATE orders SET status=? WHERE id=?', [req.body.status, req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/orders/:id (admin only)
+app.delete('/api/orders/:id', authRequired, async (req, res) => {
+  try {
+    await db.query('DELETE FROM orders WHERE id=?', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/orders/export — CSV (admin only)
+app.get('/api/orders/export', authRequired, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM orders ORDER BY ordered_at DESC');
+    const parsed = rows.map(parseJSON(['items']));
+    const csv = [
+      'id,customer_name,customer_email,customer_phone,items,total,status,ordered_at',
+      ...parsed.map(o =>
+        `"${o.id}","${o.customer_name}","${o.customer_email}","${o.customer_phone}",` +
+        `"${(o.items||[]).map(i=>`${i.name} x${i.qty}`).join('; ')}",` +
+        `"${o.total}","${o.status}","${o.ordered_at}"`
+      )
+    ].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="orders_${Date.now()}.csv"`);
+    res.send(csv);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─────────────────────────────────────────────
+//  SETTINGS ROUTES
+// ─────────────────────────────────────────────
+
+// GET /api/settings (admin only)
+app.get('/api/settings', authRequired, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM settings');
+    const obj = {};
+    rows.forEach(r => { obj[r.setting_key] = r.setting_value; });
+    res.json(obj);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/settings (admin only)
+app.put('/api/settings', authRequired, async (req, res) => {
+  try {
+    for (const [key, value] of Object.entries(req.body)) {
+      await db.query(
+        'INSERT INTO settings (setting_key, setting_value) VALUES (?,?) ON DUPLICATE KEY UPDATE setting_value=?',
+        [key, value, value]
+      );
+    }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─────────────────────────────────────────────
+//  STATS ROUTE
+// ─────────────────────────────────────────────
+app.get('/api/stats', async (req, res) => {
+  try {
+    const [[{events}]]         = await db.query('SELECT COUNT(*) as events FROM events');
+    const [[{registrations}]]  = await db.query('SELECT COUNT(*) as registrations FROM registrations');
+    const [[{products}]]       = await db.query('SELECT COUNT(*) as products FROM products');
+    const [[{orders}]]         = await db.query('SELECT COUNT(*) as orders FROM orders');
+    res.json({ events, registrations, products, orders });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function parseJSON(fields) {
+  return (row) => {
+    const r = { ...row };
+    fields.forEach(f => {
+      if (typeof r[f] === 'string') {
+        try { r[f] = JSON.parse(r[f]); } catch { r[f] = []; }
+      }
+    });
+    return r;
+  };
+}
+
+// ─────────────────────────────────────────────
+//  START
+// ─────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`✅ GREATER API running on port ${PORT}`);
+});
+
+module.exports = app;
