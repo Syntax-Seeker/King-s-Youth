@@ -1,6 +1,9 @@
 // =============================================
 //  KING-YOUTH | GREATER — Node.js/Express API
 // =============================================
+
+const API_BASE = window.GREATER_API_URL || 'https://king-s-youth-production.up.railway.app/api';
+
 const express    = require('express');
 const mysql      = require('mysql2/promise');
 const bcrypt     = require('bcrypt');
