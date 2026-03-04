@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | GREATER — Home</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .hero { min-height: 100vh; background: var(--black); position: relative; overflow: hidden; display: flex; align-items: center; }
+    .hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 50%, #0a1f4a 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 80% 20%, #1d3f8a 0%, transparent 50%); }
+    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size: 60px 60px; opacity: .3; }
+    .hero-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; text-align: center; }
+    .hero-eyebrow { display: inline-block; font-family: 'Barlow Condensed',sans-serif; font-weight: 600; font-size: .85rem; letter-spacing: 6px; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; padding: .4rem 1.5rem; border: 1px solid var(--accent); background: var(--accent-glow); }
+    .hero-title { font-family: 'Bebas Neue',cursive; font-size: clamp(5rem,18vw,14rem); line-height: .9; letter-spacing: 4px; background: linear-gradient(135deg,#fff 0%,#4a90f5 40%,#00c4ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero-sub { font-size: 1.2rem; color: var(--white-dim); margin: 1.5rem auto; max-width: 600px; font-weight: 300; line-height: 1.6; }
+    .hero-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 2.5rem; flex-wrap: wrap; }
+    .hero-event-card { margin: 3rem auto 0; max-width: 700px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem 2rem; display: flex; align-items: center; gap: 2rem; text-align: left; box-shadow: 0 0 60px var(--blue-glow); }
+    .hero-event-date { text-align: center; flex-shrink: 0; }
+    .hero-event-date .month { font-family: 'Barlow Condensed',sans-serif; font-size: .85rem; letter-spacing: 3px; color: var(--accent); text-transform: uppercase; }
+    .hero-event-date .day   { font-family: 'Bebas Neue',cursive; font-size: 4rem; line-height: 1; color: var(--white); }
+    .hero-event-date .year  { font-size: .8rem; color: var(--white-dim); }
+    .hero-event-divider { width: 1px; height: 80px; background: var(--border); flex-shrink: 0; }
+    .hero-event-info .tag { font-size: .7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+    .hero-event-info h3   { font-family: 'Bebas Neue',cursive; font-size: 2rem; letter-spacing: 2px; margin: .25rem 0; }
+    .hero-event-info p    { color: var(--white-dim); font-size: .9rem; }
+    @media (max-width:600px) { .hero-event-card { flex-direction:column; text-align:center; } .hero-event-divider { width:80px;height:1px; } }
+    .stats-strip { background: var(--deep); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .stats-strip-inner { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 2rem; text-align: center; }
+    .stat-num { font-family: 'Bebas Neue',cursive; font-size: 3rem; line-height: 1; }
+    .stat-lbl { color: var(--white-dim); font-size: .85rem; letter-spacing: 2px; text-transform: uppercase; margin-top: .25rem; }
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<div class="page-wrap">
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">King's Youth Ministry</div>
+      <h1 class="hero-title">GREATER</h1>
+      <p class="hero-sub">A generation rising. A movement igniting. Come be part of something greater than yourself.</p>
+      <div class="hero-actions">
+        <a href="register.html" class="btn btn-primary btn-lg">Register Now</a>
+        <a href="events.html"   class="btn btn-outline btn-lg">View Events</a>
+      </div>
+      <div class="hero-event-card" id="heroCard" style="display:none">
+        <div class="hero-event-date">
+          <div class="month" id="heroMonth">—</div>
+          <div class="day"   id="heroDay">—</div>
+          <div class="year"  id="heroYear">—</div>
+        </div>
+        <div class="hero-event-divider"></div>
+        <div class="hero-event-info">
+          <span class="tag">Featured Event</span>
+          <h3 id="heroEventName">Youth Camp</h3>
+          <p  id="heroEventLoc">Location TBA</p>
+          <div style="margin-top:.75rem"><span class="status-badge" id="heroEventStatus"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-strip">
+    <div class="stats-strip-inner">
+      <div><div class="stat-num" id="statReg"    style="color:var(--blue-light)">0</div><div class="stat-lbl">Registered</div></div>
+      <div><div class="stat-num" id="statEvents" style="color:var(--accent)">0</div><div class="stat-lbl">Events</div></div>
+      <div><div class="stat-num" id="statMerch"  style="color:var(--gold)">0</div><div class="stat-lbl">Merch Items</div></div>
+      <div><div class="stat-num" style="color:var(--success)">∞</div><div class="stat-lbl">Faith</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-eyebrow">What's Happening</span>
+      <h2 class="section-title">Upcoming <span>Events</span></h2>
+    </div>
+    <div class="events-grid" id="homeEventsGrid">
+      <div class="empty-state" style="grid-column:1/-1"><div class="icon">📅</div><h3>No Events Yet</h3><p>Check back soon!</p></div>
+    </div>
+    <div style="text-align:center;margin-top:2rem"><a href="events.html" class="btn btn-outline btn-lg">View All Events</a></div>
+  </div>
+
+  <div style="background:var(--deep);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+    <div style="max-width:1200px;margin:0 auto;padding:4rem 2rem;display:grid;grid-template-columns:1fr auto;gap:4rem;align-items:center">
+      <div>
+        <span class="section-eyebrow">GREATER Collection</span>
+        <h2 class="section-title" style="margin-bottom:1rem">Official <span>Merch</span></h2>
+        <p style="color:var(--white-dim);line-height:1.7;margin-bottom:1.5rem">Represent the GREATER movement. Official King-Youth merchandise available exclusively during Youth Camp events and online.</p>
+        <a href="shop.html" class="btn btn-primary btn-lg">Shop Now</a>
+      </div>
+      <div style="font-family:'Bebas Neue',cursive;font-size:8rem;opacity:.1;color:var(--blue-light);line-height:1">GREATER</div>
+    </div>
+  </div>
+
+  <div id="footer-root"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; });
+
+  async function loadHome() {
+    try {
+      const [stats, events] = await Promise.all([Stats.get(), Events.getAll()]);
+
+      document.getElementById('statReg').textContent    = stats.registrations;
+      document.getElementById('statEvents').textContent = stats.events;
+      document.getElementById('statMerch').textContent  = stats.products;
+
+      const featured = events.find(e => e.status !== 'closed');
+      if (featured) {
+        const d = new Date(featured.date + 'T00:00:00');
+        const M = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        document.getElementById('heroMonth').textContent     = M[d.getMonth()];
+        document.getElementById('heroDay').textContent       = d.getDate();
+        document.getElementById('heroYear').textContent      = d.getFullYear();
+        document.getElementById('heroEventName').textContent = featured.name;
+        document.getElementById('heroEventLoc').textContent  = '📍 ' + (featured.location||'');
+        const sb = document.getElementById('heroEventStatus');
+        sb.textContent = featured.status.charAt(0).toUpperCase()+featured.status.slice(1);
+        sb.className   = 'status-badge status-'+featured.status;
+        document.getElementById('heroCard').style.display = 'flex';
+      }
+
+      const grid = document.getElementById('homeEventsGrid');
+      const upcoming = events.filter(e=>e.status!=='closed').slice(0,3);
+      if (upcoming.length) grid.innerHTML = upcoming.map(ev=>eventCardHTML(ev)).join('');
+    } catch(e) {
+      console.warn('Could not load live data', e);
+    }
+  }
+
+  loadHome();
+</script>
+</body>
+</html>

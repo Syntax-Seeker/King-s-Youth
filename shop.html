@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | Merch Shop</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div id="nav-root"></div>
+<div class="page-wrap">
+
+  <div style="background:var(--deep);border-bottom:1px solid var(--border);padding:5rem 2rem 3rem;text-align:center">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent);font-weight:600">GREATER Collection</span>
+    <h1 style="font-family:'Bebas Neue',cursive;font-size:clamp(3rem,8vw,6rem);letter-spacing:3px;margin:.5rem 0">Official <span style="color:var(--blue-light)">Merch</span></h1>
+    <p style="color:var(--white-dim);max-width:500px;margin:0 auto">Represent the movement. Official King-Youth merchandise for the GREATER generation.</p>
+  </div>
+
+  <div class="section">
+    <div class="shop-grid" id="shopGrid">
+      <div class="empty-state" style="grid-column:1/-1"><div class="icon">👕</div><h3>Merch Coming Soon</h3><p>The official GREATER collection will be available soon!</p></div>
+    </div>
+  </div>
+
+  <div id="footer-root"></div>
+</div>
+
+<!-- CART SIDEBAR -->
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <span class="cart-title">Your Cart</span>
+    <button onclick="toggleCart()" style="background:none;border:none;color:var(--white-dim);cursor:pointer;font-size:1.25rem;padding:.25rem">✕</button>
+  </div>
+  <div class="cart-body" id="cartBody">
+    <div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total"><span>Total</span><span id="cartTotal">₱0</span></div>
+    <button class="btn btn-primary" style="width:100%" onclick="openCheckout()">Proceed to Checkout</button>
+  </div>
+</div>
+
+<!-- CHECKOUT MODAL -->
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal" style="max-width:560px">
+    <button class="modal-close" onclick="closeModal('checkoutModal')">✕</button>
+    <h2 class="modal-title">Checkout</h2>
+    <div class="checkout-steps">
+      <div class="step active" id="step1">1. Info</div>
+      <div class="step" id="step2">2. Review</div>
+      <div class="step" id="step3">3. Done</div>
+    </div>
+
+    <div id="coStep1">
+      <div class="form-group"><label class="form-label">Full Name <span class="req">*</span></label><input class="form-input" id="coName" placeholder="Your full name"></div>
+      <div class="form-group"><label class="form-label">Contact Number <span class="req">*</span></label><input class="form-input" type="tel" id="coContact" placeholder="09XX-XXX-XXXX"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="coEmail" placeholder="email@example.com"></div>
+      <div class="form-group"><label class="form-label">Delivery Address <span class="req">*</span></label><textarea class="form-textarea" id="coAddress" placeholder="Full address or 'Pickup at event'"></textarea></div>
+      <div style="text-align:right;margin-top:1rem"><button class="btn btn-primary" onclick="goStep2()">Next →</button></div>
+    </div>
+
+    <div id="coStep2" style="display:none">
+      <div id="reviewItems"></div>
+      <div style="display:flex;justify-content:space-between;margin:1rem 0;font-family:'Bebas Neue',cursive;font-size:1.4rem"><span>Total</span><span style="color:var(--accent)" id="reviewTotal">₱0</span></div>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end">
+        <button class="btn btn-outline" onclick="goStep1()">← Back</button>
+        <button class="btn btn-primary" onclick="placeOrder()">Place Order</button>
+      </div>
+    </div>
+
+    <div id="coStep3" style="display:none;text-align:center;padding:2rem 0">
+      <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
+      <h3 style="font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:2px;margin-bottom:.5rem">Order Placed!</h3>
+      <p style="color:var(--white-dim);font-size:.9rem">Thank you! The ministry will contact you for payment and delivery details.</p>
+      <button class="btn btn-primary" style="margin-top:1.5rem" onclick="closeModal('checkoutModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; });
+  initModalOverlayClose();
+
+  let allProducts = [];
+
+  async function loadShop() {
+    try {
+      allProducts = await Products.getAll();
+      renderShop();
+    } catch(e) {
+      document.getElementById('shopGrid').innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Could not load products</h3></div>';
+    }
+  }
+
+  function renderShop() {
+    const grid = document.getElementById('shopGrid');
+    if (!allProducts.length) { grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="icon">👕</div><h3>Merch Coming Soon</h3><p>Official GREATER collection will be available soon!</p></div>'; return; }
+    grid.innerHTML = allProducts.map(p=>`
+      <div class="product-card">
+        <div class="product-img">${p.images&&p.images.length?`<img src="${p.images[0]}" alt="${p.name}">`:'👕'}</div>
+        <div class="product-body">
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.description||''}</div>
+          ${p.sizes&&p.sizes.length?`<div class="variant-btns" id="size_${p.id}">${p.sizes.map((s,i)=>`<button class="variant-btn${i===0?' active':''}" onclick="selectSize(this,'${p.id}')">${s}</button>`).join('')}</div>`:''}
+          <div class="product-price">₱${Number(p.price).toLocaleString()}</div>
+          <div class="product-footer">
+            <div class="qty-ctrl">
+              <button class="qty-btn" onclick="changeQty('${p.id}',-1)">−</button>
+              <span class="qty-val" id="qty_${p.id}">1</span>
+              <button class="qty-btn" onclick="changeQty('${p.id}',1)">+</button>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="addToCart('${p.id}')">Add to Cart</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function selectSize(btn, pid) {
+    document.querySelectorAll(`#size_${pid} .variant-btn`).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  function changeQty(pid, dir) {
+    const el = document.getElementById('qty_'+pid);
+    let q = parseInt(el.textContent)+dir;
+    if (q<1) q=1; el.textContent=q;
+  }
+
+  function addToCart(pid) {
+    const p = allProducts.find(x=>x.id==pid);
+    if (!p) return;
+    const qty = parseInt(document.getElementById('qty_'+pid).textContent);
+    const sizeEl = document.querySelector(`#size_${pid} .variant-btn.active`);
+    const size = sizeEl ? sizeEl.textContent : '';
+    const idx = CART.findIndex(c=>c.productId==pid&&c.size===size);
+    if (idx>=0) CART[idx].qty+=qty;
+    else CART.push({productId:pid,name:p.name,price:Number(p.price),qty,size,image:p.images?.[0]||''});
+    saveCart(); updateCart(); toast(`${p.name} added to cart! 🛒`,'success');
+  }
+
+  function updateCart() {
+    const total = getCartTotal();
+    document.getElementById('cartTotal').textContent = '₱'+total.toLocaleString();
+    updateCartBadge();
+    renderCartBody();
+  }
+
+  function renderCartBody() {
+    const body = document.getElementById('cartBody');
+    if (!CART.length) { body.innerHTML='<div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>'; return; }
+    body.innerHTML = CART.map((item,i)=>`
+      <div class="cart-item">
+        <div style="width:50px;height:50px;border-radius:6px;overflow:hidden;background:var(--dark);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">
+          ${item.image?`<img src="${item.image}" style="width:100%;height:100%;object-fit:cover">`:'👕'}
+        </div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}${item.size?' — '+item.size:''}</div>
+          <div class="cart-item-price">₱${item.price.toLocaleString()} × ${item.qty}</div>
+        </div>
+        <button class="action-btn del" onclick="removeFromCart(${i})">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function removeFromCart(idx) { CART.splice(idx,1); saveCart(); updateCart(); }
+
+  function toggleCart() { document.getElementById('cartSidebar').classList.toggle('open'); renderCartBody(); }
+
+  function openCheckout() {
+    if (!CART.length) { toast('Your cart is empty!','error'); return; }
+    document.getElementById('cartSidebar').classList.remove('open');
+    document.getElementById('coStep1').style.display='block';
+    document.getElementById('coStep2').style.display='none';
+    document.getElementById('coStep3').style.display='none';
+    document.getElementById('step1').className='step active';
+    document.getElementById('step2').className='step';
+    document.getElementById('step3').className='step';
+    openModal('checkoutModal');
+  }
+
+  function goStep2() {
+    if (!document.getElementById('coName').value||!document.getElementById('coContact').value||!document.getElementById('coAddress').value) { toast('Please fill in all required fields.','error'); return; }
+    document.getElementById('coStep1').style.display='none';
+    document.getElementById('coStep2').style.display='block';
+    document.getElementById('step1').className='step done';
+    document.getElementById('step2').className='step active';
+    const total=getCartTotal();
+    document.getElementById('reviewTotal').textContent='₱'+total.toLocaleString();
+    document.getElementById('reviewItems').innerHTML=CART.map(it=>`
+      <div style="display:flex;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border)">
+        <span>${it.name}${it.size?' ('+it.size+')':''} × ${it.qty}</span>
+        <span style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700">₱${(it.price*it.qty).toLocaleString()}</span>
+      </div>
+    `).join('');
+  }
+
+  function goStep1() { document.getElementById('coStep1').style.display='block'; document.getElementById('coStep2').style.display='none'; document.getElementById('step1').className='step active'; document.getElementById('step2').className='step'; }
+
+  async function placeOrder() {
+    const btn = document.querySelector('#coStep2 .btn-primary');
+    btn.textContent = 'Placing Order…'; btn.disabled = true;
+    const total = getCartTotal();
+    try {
+      await Orders.create({
+        customer_name:    document.getElementById('coName').value,
+        customer_phone:   document.getElementById('coContact').value,
+        customer_email:   document.getElementById('coEmail').value,
+        customer_address: document.getElementById('coAddress').value,
+        items: CART.map(c=>({name:c.name,size:c.size,qty:c.qty,price:c.price})),
+        total
+      });
+      CART.length = 0; saveCart(); updateCart();
+      document.getElementById('coStep2').style.display='none';
+      document.getElementById('coStep3').style.display='block';
+      document.getElementById('step2').className='step done';
+      document.getElementById('step3').className='step active';
+    } catch(e) {
+      toast('Order failed: '+e.message,'error');
+      btn.textContent = 'Place Order'; btn.disabled = false;
+    }
+  }
+
+  loadShop();
+  updateCart();
+</script>
+</body>
+</html>

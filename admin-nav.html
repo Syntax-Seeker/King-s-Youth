@@ -1,0 +1,30 @@
+<!--
+  =============================================
+  KING-YOUTH | GREATER — ADMIN SIDEBAR NAV
+  Usage: fetch('admin-nav.html') into #admin-nav-root
+  =============================================
+-->
+<aside class="admin-sidebar">
+  <div style="padding:1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+    <div style="width:36px;height:36px;background:var(--blue);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:16px;color:#fff;flex-shrink:0">K</div>
+    <div>
+      <div style="font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:2px;line-height:1">King-Youth</div>
+      <div style="font-size:.55rem;color:var(--accent);letter-spacing:3px;text-transform:uppercase">Admin Portal</div>
+    </div>
+  </div>
+
+  <div class="admin-nav-section">Overview</div>
+  <a class="admin-nav-item" href="admin-dashboard.html"    data-page="admin-dashboard.html"><span class="admin-nav-icon">📊</span> Dashboard</a>
+
+  <div class="admin-nav-section">Management</div>
+  <a class="admin-nav-item" href="admin-events.html"       data-page="admin-events.html"><span class="admin-nav-icon">📅</span> Events</a>
+  <a class="admin-nav-item" href="admin-calendar.html"     data-page="admin-calendar.html"><span class="admin-nav-icon">🗓️</span> Calendar</a>
+  <a class="admin-nav-item" href="admin-registrations.html" data-page="admin-registrations.html"><span class="admin-nav-icon">👥</span> Registrations</a>
+  <a class="admin-nav-item" href="admin-merch.html"        data-page="admin-merch.html"><span class="admin-nav-icon">👕</span> Merch / Products</a>
+  <a class="admin-nav-item" href="admin-orders.html"       data-page="admin-orders.html"><span class="admin-nav-icon">📦</span> Orders</a>
+
+  <div class="admin-nav-section">Account</div>
+  <a class="admin-nav-item" href="admin-settings.html"     data-page="admin-settings.html"><span class="admin-nav-icon">⚙️</span> Settings</a>
+  <a class="admin-nav-item" href="index.html"><span class="admin-nav-icon">🌐</span> View Website</a>
+  <a class="admin-nav-item" onclick="adminLogout()" style="cursor:pointer"><span class="admin-nav-icon">🚪</span> Logout</a>
+</aside>
