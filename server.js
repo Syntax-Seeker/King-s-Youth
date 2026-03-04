@@ -14,10 +14,7 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'greater2025_secret_change_in_production';
 
 // ── Middleware ─────────────────────────────────
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-  contentSecurityPolicy: false
-}));
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
 app.use(express.json({ limit: '20mb' })); // large for base64 images
 app.use(express.static('public')); // serve HTML files
@@ -36,8 +33,7 @@ const db = mysql.createPool({
 
 // ── Auth Middleware ────────────────────────────
 function authRequired(req, res, next) {
-  const token = req.headers['authorization']?.split(' ')[1] 
-    || req.query.token;
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   try {
     req.admin = jwt.verify(token, JWT_SECRET);
@@ -335,6 +331,16 @@ app.get('/api/orders/export', authRequired, async (req, res) => {
 // ─────────────────────────────────────────────
 //  SETTINGS ROUTES
 // ─────────────────────────────────────────────
+
+// GET /api/settings/public — logo and ministry name (no auth needed)
+app.get('/api/settings/public', async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM settings WHERE setting_key IN ('site_logo','ministry_name')");
+    const obj = {};
+    rows.forEach(r => { obj[r.setting_key] = r.setting_value; });
+    res.json(obj);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
 
 // GET /api/settings (admin only)
 app.get('/api/settings', authRequired, async (req, res) => {
