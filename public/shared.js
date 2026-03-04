@@ -4,7 +4,6 @@
 
 // ── Config — change this to your server URL ───
 <<<<<<< HEAD
-const API_BASE = window.GREATER_API_URL || 'king-s-youth-production.up.railway.app/api';
 =======
 const API_BASE = window.GREATER_API_URL || 'https://king-s-youth-production.up.railway.app/api';
 >>>>>>> 28ee78359c6f5fcb597fbc3ef53fbbcab19d1822
