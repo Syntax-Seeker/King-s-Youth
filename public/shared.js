@@ -3,7 +3,7 @@
    ============================================= */
 
 // ── Config — change this to your server URL ───
-const API_BASE = window.GREATER_API_URL || 'http://localhost:3000/api';
+const API_BASE = window.GREATER_API_URL || 'king-s-youth-production.up.railway.app';
 
 // ── Cart (stays in memory/sessionStorage) ─────
 const CART = JSON.parse(sessionStorage.getItem('greater_cart') || '[]');
