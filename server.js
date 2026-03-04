@@ -332,6 +332,16 @@ app.get('/api/orders/export', authRequired, async (req, res) => {
 //  SETTINGS ROUTES
 // ─────────────────────────────────────────────
 
+// GET /api/settings/public — logo and ministry name (no auth needed)
+app.get('/api/settings/public', async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM settings WHERE setting_key IN ('site_logo','ministry_name')");
+    const obj = {};
+    rows.forEach(r => { obj[r.setting_key] = r.setting_value; });
+    res.json(obj);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // GET /api/settings (admin only)
 app.get('/api/settings', authRequired, async (req, res) => {
   try {

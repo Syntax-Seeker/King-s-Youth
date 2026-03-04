@@ -5,10 +5,10 @@
   =============================================
 -->
 <nav>
-  <a class="nav-logo" href="index.html">
-    <div class="nav-logo-icon">K</div>
+  <a class="nav-logo" href="index.html" id="navLogoLink">
+    <div class="nav-logo-icon" id="navLogoIcon">K</div>
     <div>
-      <span class="nav-logo-text">King-Youth</span>
+      <span class="nav-logo-text">King's-Youth</span>
       <span class="nav-logo-sub">GREATER</span>
     </div>
   </a>
@@ -26,3 +26,20 @@
     <a href="admin-login.html" class="btn btn-primary">Admin</a>
   </div>
 </nav>
+<script>
+  // Load custom logo if set
+  (async function loadNavLogo() {
+    try {
+      const res = await fetch((window.GREATER_API_URL || 'http://localhost:3000/api') + '/settings/public');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.site_logo) {
+        const icon = document.getElementById('navLogoIcon');
+        if (icon) {
+          icon.style.cssText = 'width:40px;height:40px;overflow:hidden;background:transparent;clip-path:none;padding:0';
+          icon.innerHTML = `<img src="${data.site_logo}" style="width:100%;height:100%;object-fit:contain">`;
+        }
+      }
+    } catch(e) {}
+  })();
+</script>

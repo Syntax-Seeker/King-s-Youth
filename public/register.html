@@ -54,6 +54,7 @@
         <div class="form-grid">
           <div class="form-group"><label class="form-label">Church / Ministry <span class="req">*</span></label><input class="form-input" id="rChurch" placeholder="Your church name" required></div>
           <div class="form-group"><label class="form-label">Cell Group / Role</label><input class="form-input" id="rCellGroup" placeholder="Cell leader, member, etc."></div>
+          <div class="form-group"><label class="form-label">How long have you been going to church? <span class="req">*</span></label><select class="form-select" id="rChurchDuration" required><option value="">Select duration</option><option value="New Attendee">New Attendee</option><option value="Less than a year">Less than a year</option><option value="More than 3 years">More than 3 years</option><option value="Over 5 years">Over 5 years</option></select></div>
           <div class="form-group full"><label class="form-label">Select Event <span class="req">*</span></label>
             <select class="form-select" id="rEvent" required><option value="">Select Event</option></select>
           </div>
@@ -153,7 +154,7 @@
       postal_code:                '',
       church_name:                document.getElementById('rChurch').value.trim(),
       pastor_name:                document.getElementById('rCellGroup')?.value.trim() || '',
-      church_phone:               '',
+      church_phone:               document.getElementById('rChurchDuration')?.value || '',
       emergency_contact_name:     document.getElementById('rEmergName').value.trim(),
       emergency_contact_phone:    document.getElementById('rEmergContact').value.trim(),
       emergency_contact_relation: document.getElementById('rRelation').value.trim(),
