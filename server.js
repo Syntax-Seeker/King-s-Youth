@@ -57,6 +57,18 @@ app.get('/api/debug/checkadmin', async (req, res) => {
   const [rows] = await db.query('SELECT username, LENGTH(password_hash) as hashlen, SUBSTRING(password_hash,1,7) as hash_start FROM admins');
   res.json(rows);
 });
+
+app.get('/api/test/login', async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT * FROM admins WHERE username = 'admin'");
+    if (!rows.length) return res.json({ error: 'No admin found' });
+    const match = await bcrypt.compare('greater2025', rows[0].password_hash);
+    res.json({ match, username: rows[0].username, hashlen: rows[0].password_hash.length });
+  } catch(e) {
+    res.json({ error: e.message });
+  }
+});
+
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
