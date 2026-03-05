@@ -53,9 +53,9 @@ function authRequired(req, res, next) {
 // ─────────────────────────────────────────────
 //  AUTH ROUTES
 // ─────────────────────────────────────────────
-app.get('/api/makehash/:pass', async (req, res) => {
-  const hash = await bcrypt.hash(req.params.pass, 10);
-  res.json({ hash });
+app.get('/api/debug/checkadmin', async (req, res) => {
+  const [rows] = await db.query('SELECT username, LENGTH(password_hash) as hashlen, SUBSTRING(password_hash,1,7) as hash_start FROM admins');
+  res.json(rows);
 });
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
