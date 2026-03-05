@@ -24,14 +24,18 @@ app.use(express.static('public')); // serve HTML files
 
 // ── DB Pool ────────────────────────────────────
 const db = mysql.createPool({
-  host:     process.env.DB_HOST     || 'localhost',
-  port:     process.env.DB_PORT     || 3306,
-  user:     process.env.DB_USER     || 'root',
-  password: process.env.DB_PASS     || '',
-  database: process.env.DB_NAME     || 'kingyouth',
+  host:     process.env.DB_HOST,
+  port:     process.env.DB_PORT,
+  user:     process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   waitForConnections: true,
-  connectionLimit: 10,
-  charset: 'utf8mb4'
+  connectionLimit:    10,
+  connectTimeout:     60000,
+  acquireTimeout:     60000,
+  timeout:            60000,
+  keepAliveInitialDelay: 10000,
+  enableKeepAlive: true
 });
 
 // ── Auth Middleware ────────────────────────────
