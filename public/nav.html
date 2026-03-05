@@ -1,0 +1,45 @@
+<!--
+  =============================================
+  KING-YOUTH | GREATER — NAV COMPONENT
+  Usage: fetch('nav.html') into #nav-root
+  =============================================
+-->
+<nav>
+  <a class="nav-logo" href="index.html" id="navLogoLink">
+    <div class="nav-logo-icon" id="navLogoIcon">K</div>
+    <div>
+      <span class="nav-logo-text">King-Youth</span>
+      <span class="nav-logo-sub">GREATER</span>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html"    data-page="index.html">Home</a>
+    <a href="events.html"   data-page="events.html">Events</a>
+    <a href="shop.html"     data-page="shop.html">Merch</a>
+    <a href="about.html"    data-page="about.html">About</a>
+  </div>
+  <div class="nav-actions">
+    <a href="shop.html" class="btn btn-outline" style="position:relative">
+      🛒 Cart
+      <span class="cart-badge" id="cartBadge">0</span>
+    </a>
+    <a href="admin-login.html" class="btn btn-primary">Admin</a>
+  </div>
+</nav>
+<script>
+  // Load custom logo if set
+  (async function loadNavLogo() {
+    try {
+      const res = await fetch('https://king-s-youth-production.up.railway.app/api/settings/public');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.site_logo) {
+        const icon = document.getElementById('navLogoIcon');
+        if (icon) {
+          icon.style.cssText = 'width:40px;height:40px;overflow:hidden;background:transparent;clip-path:none;padding:0';
+          icon.innerHTML = `<img src="${data.site_logo}" style="width:100%;height:100%;object-fit:contain">`;
+        }
+      }
+    } catch(e) {}
+  })();
+</script>

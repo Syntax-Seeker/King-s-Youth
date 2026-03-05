@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | About</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .about-hero { background: var(--deep); border-bottom: 1px solid var(--border); padding: 5rem 2rem 3rem; text-align: center; }
+    .value-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 1.5rem; margin-top: 3rem; }
+    .value-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; transition: all .3s; }
+    .value-card:hover { border-color: var(--blue); transform: translateY(-3px); }
+    .value-card .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+    .value-card h3 { font-family: 'Bebas Neue',cursive; font-size: 1.4rem; letter-spacing: 1px; margin-bottom: .5rem; color: var(--blue-light); }
+    .value-card p { font-size: .9rem; color: var(--white-dim); line-height: 1.6; }
+    .greater-section { background: var(--deep); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 4rem 2rem; }
+    .greater-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 2rem; }
+    .greater-card { display: flex; gap: 1rem; align-items: flex-start; }
+    .greater-letter { font-family: 'Bebas Neue',cursive; font-size: 3rem; color: var(--blue); line-height: 1; flex-shrink: 0; width: 40px; }
+    .greater-text h4 { font-family: 'Barlow Condensed',sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: .25rem; }
+    .greater-text p  { font-size: .85rem; color: var(--white-dim); line-height: 1.5; }
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<div class="page-wrap">
+
+  <div class="about-hero">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent);font-weight:600">Who We Are</span>
+    <h1 style="font-family:'Bebas Neue',cursive;font-size:clamp(3rem,8vw,6rem);letter-spacing:3px;margin:.5rem 0">About <span style="color:var(--blue-light)">King-Youth</span></h1>
+    <p style="color:var(--white-dim);max-width:600px;margin:0 auto;line-height:1.7">King's Youth Ministry — a community of young believers committed to growing in faith, serving one another, and making a lasting impact in our generation.</p>
+  </div>
+
+  <!-- GREATER Meaning -->
+  <div class="greater-section">
+    <div style="text-align:center;max-width:1000px;margin:0 auto 3rem">
+      <span class="section-eyebrow">Our Theme</span>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:clamp(4rem,10vw,8rem);letter-spacing:4px;background:linear-gradient(135deg,#fff 0%,#4a90f5 40%,#00c4ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">GREATER</h2>
+      <p style="color:var(--white-dim);max-width:600px;margin:0 auto">More than a word. A declaration that this generation is called to be greater — in faith, love, and purpose.</p>
+    </div>
+    <div class="greater-grid">
+      <div class="greater-card"><div class="greater-letter">G</div><div class="greater-text"><h4>God-centered</h4><p>Everything we do flows from our faith in God and His Word.</p></div></div>
+      <div class="greater-card"><div class="greater-letter">R</div><div class="greater-text"><h4>Radical</h4><p>We pursue a radical, wholehearted devotion to Christ.</p></div></div>
+      <div class="greater-card"><div class="greater-letter">A</div><div class="greater-text"><h4>Authentic</h4><p>We are real, genuine, and transparent in community.</p></div></div>
+      <div class="greater-card"><div class="greater-letter">T</div><div class="greater-text"><h4>Transformed</h4><p>Changed from the inside out through the power of the Gospel.</p></div></div>
+      <div class="greater-card"><div class="greater-letter">E</div><div class="greater-text"><h4>Empowered</h4><p>Equipped and sent to make a difference in our generation.</p></div></div>
+      <div class="greater-card"><div class="greater-letter">R</div><div class="greater-text"><h4>Reaching Out</h4><p>Committed to sharing the love of Christ with others.</p></div></div>
+    </div>
+  </div>
+
+  <!-- Values -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-eyebrow">What We Stand For</span>
+      <h2 class="section-title">Our <span>Values</span></h2>
+    </div>
+    <div class="value-grid">
+      <div class="value-card"><div class="icon">🙏</div><h3>Faith</h3><p>A deep, rooted relationship with God is the foundation of everything we do as a ministry.</p></div>
+      <div class="value-card"><div class="icon">🤝</div><h3>Community</h3><p>We believe in the power of authentic, life-giving community where everyone belongs.</p></div>
+      <div class="value-card"><div class="icon">🔥</div><h3>Passion</h3><p>We pursue God with all our hearts — in worship, in service, and in everyday life.</p></div>
+      <div class="value-card"><div class="icon">🌍</div><h3>Mission</h3><p>We are called to reach our generation and make a lasting difference in our world.</p></div>
+    </div>
+    <div style="text-align:center;margin-top:3rem">
+      <a href="register.html" class="btn btn-primary btn-lg">Join Us — Register Now</a>
+    </div>
+  </div>
+
+  <!-- Youth Camp -->
+  <div style="background:var(--deep);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+    <div style="max-width:900px;margin:0 auto;padding:4rem 2rem;text-align:center">
+      <span class="section-eyebrow">Flagship Event</span>
+      <h2 class="section-title" style="margin-bottom:1rem">Youth <span>Camp</span></h2>
+      <p style="color:var(--white-dim);font-size:1rem;line-height:1.8;max-width:650px;margin:0 auto 2rem">
+        Youth Camp is our biggest annual event — bringing together young people from all walks of life for a powerful weekend of worship, teaching, fellowship, and transformation. It's not just a camp. It's an encounter.
+      </p>
+      <a href="events.html" class="btn btn-primary btn-lg">View Upcoming Events</a>
+    </div>
+  </div>
+
+  <div id="footer-root"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; });
+</script>
+</body>
+</html>

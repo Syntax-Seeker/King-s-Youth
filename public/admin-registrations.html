@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | Admin — Registrations</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="page-wrap">
+<div class="admin-layout">
+  <div id="admin-nav-root"></div>
+  <main class="admin-content">
+    <div class="admin-top">
+      <h2 class="admin-page-title">Registrations</h2>
+      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+        <select class="form-select" id="filterEvent" style="width:200px" onchange="render()">
+          <option value="">All Events</option>
+        </select>
+        <button class="export-btn" onclick="exportCSV()">📊 Export to Excel</button>
+      </div>
+    </div>
+
+    <div class="data-table-wrap">
+      <div class="table-header">
+        <div class="table-search"><input type="text" placeholder="Search participants..." oninput="render()" id="searchInput"></div>
+        <span id="countLabel" style="font-size:.85rem;color:var(--white-dim)">0 records</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Full Name</th><th>Age</th><th>Gender</th>
+            <th>Contact</th><th>Email</th><th>Address</th><th>Church</th><th>Cell Group</th><th>Church Duration</th>
+            <th>Event</th><th>Emergency Contact</th><th>Medical</th><th>Reg. Date</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="regBody"><tr><td colspan="14" style="text-align:center;color:var(--white-dim);padding:2rem">No registrations yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- VIEW PARTICIPANT MODAL -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal" style="max-width:600px">
+    <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+    <h2 class="modal-title" id="viewName">Participant</h2>
+    <div id="viewContent"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  requireAdmin();
+  fetch('admin-nav.html').then(r=>r.text()).then(h=>{
+    document.getElementById('admin-nav-root').innerHTML=h;
+    document.querySelectorAll('.admin-nav-item[data-page]').forEach(a=>{ a.classList.toggle('active', a.dataset.page==='admin-registrations.html'); });
+  });
+  initModalOverlayClose();
+
+  let allRegs = [];
+
+  async function init() {
+    // Populate event filter
+    const filterSel = document.getElementById('filterEvent');
+    try {
+      const events = await Events.getAll();
+      events.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=e.name; filterSel.appendChild(o); });
+    } catch(e) {}
+    await render();
+  }
+
+  function getFiltered() {
+    const filterEv=document.getElementById('filterEvent').value;
+    const search=(document.getElementById('searchInput').value||'').toLowerCase();
+    let data=allRegs;
+    if (filterEv) data=data.filter(r=>r.event_id==filterEv);
+    if (search)  data=data.filter(r=>`${r.first_name} ${r.last_name} ${r.church_name} ${r.event_name} ${r.email} ${r.phone}`.toLowerCase().includes(search));
+    return data;
+  }
+
+  async function render() {
+    const tbody=document.getElementById('regBody');
+    tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:var(--white-dim);padding:2rem">Loading…</td></tr>';
+    try {
+      allRegs = await Registrations.getAll();
+      const data=getFiltered();
+      document.getElementById('countLabel').textContent=data.length+' records';
+      if (!data.length) { tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:var(--white-dim);padding:2rem">No records found</td></tr>'; return; }
+      tbody.innerHTML=data.map((r,i)=>`
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${r.first_name} ${r.last_name}</strong></td>
+          <td>${r.age||'—'}</td>
+          <td>${r.gender||'—'}</td>
+          <td>${r.phone||'—'}</td>
+          <td>${r.email||'—'}</td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.address||''}">${r.address||'—'}</td>
+          <td>${r.church_name||'—'}</td>
+          <td>${r.pastor_name||'—'}</td>
+        <td>${r.church_phone||'—'}</td>
+        <td>${r.event_name||'—'}</td>
+          <td>${r.emergency_contact_name||'—'} (${r.emergency_contact_phone||'—'})</td>
+          <td>${r.medical_conditions||'—'}</td>
+          <td>${new Date(r.registered_at).toLocaleDateString()}</td>
+          <td style="display:flex;gap:.4rem">
+            <button class="action-btn" onclick="viewReg(${r.id})">View</button>
+            <button class="action-btn del" onclick="deleteReg(${r.id})">Del</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch(e) { tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:var(--danger);padding:2rem">Failed to load</td></tr>'; }
+  }
+
+  function filterRender() {
+    const data=getFiltered();
+    document.getElementById('countLabel').textContent=data.length+' records';
+    const tbody=document.getElementById('regBody');
+    if (!data.length) { tbody.innerHTML='<tr><td colspan="14" style="text-align:center;color:var(--white-dim);padding:2rem">No records found</td></tr>'; return; }
+    tbody.innerHTML=data.map((r,i)=>`
+      <tr>
+        <td>${i+1}</td>
+        <td><strong>${r.first_name} ${r.last_name}</strong></td>
+        <td>${r.age||'—'}</td>
+        <td>${r.gender||'—'}</td>
+        <td>${r.phone||'—'}</td>
+        <td>${r.email||'—'}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.address||'—'}</td>
+        <td>${r.church_name||'—'}</td>
+        <td>${r.pastor_name||'—'}</td>
+        <td>${r.event_name||'—'}</td>
+        <td>${r.emergency_contact_name||'—'} (${r.emergency_contact_phone||'—'})</td>
+        <td>${r.medical_conditions||'—'}</td>
+        <td>${new Date(r.registered_at).toLocaleDateString()}</td>
+        <td style="display:flex;gap:.4rem">
+          <button class="action-btn" onclick="viewReg(${r.id})">View</button>
+          <button class="action-btn del" onclick="deleteReg(${r.id})">Del</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function viewReg(id) {
+    const r=allRegs.find(x=>x.id===id);
+    if (!r) return;
+    document.getElementById('viewName').textContent=r.first_name+' '+r.last_name;
+    document.getElementById('viewContent').innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.9rem">
+        ${[
+          ['Age', r.age||'—'], ['Gender', r.gender||'—'], ['Contact', r.phone||'—'], ['Email', r.email||'—'],
+          ['Church', r.church_name||'—'], ['Cell Group', r.pastor_name||'—'], ['Church Attendance', r.church_phone||'—'], ['Event', r.event_name||'—'],
+          ['Emergency Contact', (r.emergency_contact_name||'—')+' ('+( r.emergency_contact_phone||'—')+')'],
+          ['Relationship', r.emergency_contact_relation||'—'], ['Registered', new Date(r.registered_at).toLocaleString()]
+        ].map(([k,v])=>`<div><div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">${k}</div><div>${v}</div></div>`).join('')}
+        <div style="grid-column:1/-1"><div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Address</div><div>${r.address||'—'}</div></div>
+        <div style="grid-column:1/-1"><div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Medical Notes</div><div>${r.medical_conditions||'None'}</div></div>
+      </div>
+    `;
+    openModal('viewModal');
+  }
+
+  async function deleteReg(id) {
+    if (!confirm('Remove this registration?')) return;
+    try {
+      await Registrations.delete(id);
+      allRegs=allRegs.filter(r=>r.id!==id);
+      filterRender();
+      toast('Registration removed.','info');
+    } catch(err) { toast('Delete failed: '+err.message,'error'); }
+  }
+
+  function exportCSV() {
+    const filterEv = document.getElementById('filterEvent').value || '';
+    const url = Registrations.exportURL(filterEv);
+    exportWithAuth(url);
+    toast('Downloading CSV… 📊','success');
+  }
+
+  init();
+</script>
+</body>
+</html>

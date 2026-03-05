@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | Events</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .events-hero { background: var(--deep); border-bottom: 1px solid var(--border); padding: 5rem 2rem 3rem; text-align: center; }
+    .filter-bar { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 3rem; }
+    .filter-btn { padding: .4rem 1.25rem; border: 1px solid var(--border); background: none; color: var(--white-dim); border-radius: 20px; cursor: pointer; font-family: 'Barlow Condensed',sans-serif; font-weight: 600; font-size: .85rem; letter-spacing: 1px; transition: all .2s; }
+    .filter-btn:hover, .filter-btn.active { border-color: var(--blue); color: var(--blue-light); background: var(--blue-glow); }
+  </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<div class="page-wrap">
+
+  <div class="events-hero">
+    <span style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent);font-weight:600">King's Youth Ministry</span>
+    <h1 style="font-family:'Bebas Neue',cursive;font-size:clamp(3rem,8vw,6rem);letter-spacing:3px;margin:.5rem 0">All <span style="color:var(--blue-light)">Events</span></h1>
+    <p style="color:var(--white-dim);font-size:1rem;max-width:500px;margin:0 auto">Register for upcoming Youth Camp events and be part of the GREATER movement.</p>
+  </div>
+
+  <div class="section">
+    <div class="filter-bar">
+      <button class="filter-btn active" onclick="filterEvents('all',this)">All</button>
+      <button class="filter-btn" onclick="filterEvents('open',this)">Open</button>
+      <button class="filter-btn" onclick="filterEvents('upcoming',this)">Upcoming</button>
+      <button class="filter-btn" onclick="filterEvents('closed',this)">Closed</button>
+    </div>
+    <div class="events-grid" id="eventsGrid">
+      <div class="empty-state" style="grid-column:1/-1"><div class="icon">📅</div><h3>No Events Posted Yet</h3><p>The admin will post events soon. Stay tuned!</p></div>
+    </div>
+  </div>
+
+  <div id="footer-root"></div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; });
+
+  let allEvents = [];
+  let currentFilter = 'all';
+
+  function filterEvents(status, btn) {
+    currentFilter = status;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderGrid();
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('eventsGrid');
+    let data = currentFilter === 'all' ? allEvents : allEvents.filter(e=>e.status===currentFilter);
+    if (!data.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">📅</div><h3>No Events Found</h3><p>Try a different filter.</p></div>';
+      return;
+    }
+    grid.innerHTML = data.map(ev=>eventCardHTML(ev)).join('');
+  }
+
+  async function loadEvents() {
+    try {
+      allEvents = await Events.getAll();
+      renderGrid();
+    } catch(e) {
+      document.getElementById('eventsGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Could not load events</h3><p>Please try again later.</p></div>';
+    }
+  }
+
+  loadEvents();
+</script>
+</body>
+</html>

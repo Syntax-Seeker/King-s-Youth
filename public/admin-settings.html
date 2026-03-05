@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | Admin — Settings</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="page-wrap">
+<div class="admin-layout">
+  <div id="admin-nav-root"></div>
+  <main class="admin-content">
+    <div class="admin-top">
+      <h2 class="admin-page-title">Settings</h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;max-width:900px">
+
+      <!-- Admin Credentials -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.75rem">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem">🔐 Admin Credentials</h3>
+        <div class="form-group"><label class="form-label">Username</label><input class="form-input" id="setUser" placeholder="admin"></div>
+        <div class="form-group"><label class="form-label">Current Password</label><input class="form-input" type="password" id="curPass" placeholder="Current password"></div>
+        <div class="form-group"><label class="form-label">New Password</label><input class="form-input" type="password" id="newPass" placeholder="Leave blank to keep current"></div>
+        <div class="form-group"><label class="form-label">Confirm New Password</label><input class="form-input" type="password" id="confPass" placeholder="Repeat new password"></div>
+        <button class="btn btn-primary" onclick="saveCredentials()">Update Credentials</button>
+      </div>
+
+      <!-- Ministry Info -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.75rem">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem">⛪ Ministry Info</h3>
+        <div class="form-group"><label class="form-label">Ministry Name</label><input class="form-input" id="setMinistry" placeholder="King's Youth Ministry"></div>
+        <div class="form-group"><label class="form-label">Contact Email</label><input class="form-input" type="email" id="setEmail" placeholder="kingyouth@ministry.org"></div>
+        <div class="form-group"><label class="form-label">Contact Number</label><input class="form-input" type="tel" id="setPhone" placeholder="09XX-XXX-XXXX"></div>
+        <div class="form-group"><label class="form-label">Location / Address</label><input class="form-input" id="setAddress" placeholder="Ministry address"></div>
+        <button class="btn btn-primary" onclick="saveMinistry()">Save Info</button>
+      </div>
+
+
+      <!-- Logo Upload -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.75rem;grid-column:1/-1">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem">🖼️ Website Logo</h3>
+        <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap">
+          <div style="flex-shrink:0">
+            <div style="font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--white-dim);margin-bottom:.75rem">Current Logo</div>
+            <div id="logoPreview" style="width:100px;height:100px;border-radius:12px;background:var(--deep);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <div id="logoPlaceholder" style="font-family:'Bebas Neue',cursive;font-size:2.5rem;color:var(--blue)">K</div>
+            </div>
+          </div>
+          <div style="flex:1;min-width:200px">
+            <div style="font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--white-dim);margin-bottom:.75rem">Upload New Logo</div>
+            <div class="upload-zone" style="padding:1.5rem;text-align:center;cursor:pointer" onclick="document.getElementById('logoInput').click()">
+              <div style="font-size:2rem;margin-bottom:.5rem">📁</div>
+              <div style="font-size:.85rem;color:var(--white-dim)">Click to upload image (PNG, JPG, SVG)</div>
+              <div style="font-size:.75rem;color:var(--white-dim);margin-top:.25rem">Recommended: square image, min 100x100px</div>
+              <input type="file" id="logoInput" accept="image/*" style="display:none" onchange="previewLogo(this)">
+            </div>
+            <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="saveLogo()">💾 Save Logo</button>
+              <button class="btn btn-outline" onclick="removeLogo()">🗑️ Remove Logo</button>
+            </div>
+            <p style="color:var(--white-dim);font-size:.8rem;margin-top:.75rem">Logo appears in the navigation bar across all pages.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Management -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.75rem;grid-column:1/-1">
+        <h3 style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem">🗄️ Data Management</h3>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px;background:var(--deep);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center">
+            <div style="font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--blue-light)" id="dmReg">0</div>
+            <div style="font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--white-dim)">Registrations</div>
+          </div>
+          <div style="flex:1;min-width:200px;background:var(--deep);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center">
+            <div style="font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--accent)" id="dmEvents">0</div>
+            <div style="font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--white-dim)">Events</div>
+          </div>
+          <div style="flex:1;min-width:200px;background:var(--deep);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center">
+            <div style="font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--gold)" id="dmProducts">0</div>
+            <div style="font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--white-dim)">Products</div>
+          </div>
+          <div style="flex:1;min-width:200px;background:var(--deep);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center">
+            <div style="font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--success)" id="dmOrders">0</div>
+            <div style="font-size:.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--white-dim)">Orders</div>
+          </div>
+        </div>
+        <div style="margin-top:1.5rem;display:flex;gap:1rem;flex-wrap:wrap">
+          <button class="btn btn-outline" onclick="exportAll()">📊 Export All Data</button>
+          <button class="btn btn-danger" onclick="clearData()">⚠️ Clear All Data</button>
+        </div>
+        <p style="color:var(--white-dim);font-size:.8rem;margin-top:.75rem">⚠️ Clearing data is permanent and cannot be undone. Export a backup first.</p>
+      </div>
+
+    </div>
+  </main>
+</div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  requireAdmin();
+  fetch('admin-nav.html').then(r=>r.text()).then(h=>{
+    document.getElementById('admin-nav-root').innerHTML=h;
+    document.querySelectorAll('.admin-nav-item[data-page]').forEach(a=>{ a.classList.toggle('active', a.dataset.page==='admin-settings.html'); });
+  });
+
+  async function loadSettings() {
+    try {
+      const [stats, settings] = await Promise.all([Stats.get(), Settings.get()]);
+      document.getElementById('setUser').value       = sessionStorage.getItem('greater_admin') || 'admin';
+      document.getElementById('dmReg').textContent      = stats.registrations;
+      document.getElementById('dmEvents').textContent   = stats.events;
+      document.getElementById('dmProducts').textContent = stats.products;
+      document.getElementById('dmOrders').textContent   = stats.orders;
+      document.getElementById('setMinistry').value = settings.ministry_name||"King's Youth Ministry";
+      document.getElementById('setEmail').value    = settings.ministry_email||'';
+      document.getElementById('setPhone').value    = settings.ministry_phone||'';
+      document.getElementById('setAddress').value  = settings.ministry_address||'';
+      if (settings.site_logo) {
+        document.getElementById('logoPreview').innerHTML = `<img src="${settings.site_logo}" style="width:100%;height:100%;object-fit:contain;padding:4px">`;
+      }
+    } catch(e) { toast('Failed to load settings','error'); }
+  }
+
+  async function saveCredentials() {
+    const newUser = document.getElementById('setUser').value.trim();
+    const curPass = document.getElementById('curPass').value;
+    const newPass = document.getElementById('newPass').value;
+    const confPass= document.getElementById('confPass').value;
+    if (!newUser) { toast('Username cannot be empty.','error'); return; }
+    if (newPass !== confPass) { toast('New passwords do not match.','error'); return; }
+    if (!curPass) { toast('Enter your current password.','error'); return; }
+    try {
+      await api('/auth/change-password', {
+        method:'POST',
+        body: JSON.stringify({ currentPassword: curPass, newUsername: newUser, newPassword: newPass||curPass })
+      });
+      sessionStorage.setItem('greater_admin', newUser);
+      document.getElementById('curPass').value='';
+      document.getElementById('newPass').value='';
+      document.getElementById('confPass').value='';
+      toast('Credentials updated! 🔐','success');
+    } catch(err) { toast(err.message,'error'); }
+  }
+
+  async function saveMinistry() {
+    try {
+      await Settings.update({
+        ministry_name:    document.getElementById('setMinistry').value,
+        ministry_email:   document.getElementById('setEmail').value,
+        ministry_phone:   document.getElementById('setPhone').value,
+        ministry_address: document.getElementById('setAddress').value
+      });
+      toast('Ministry info saved! ✅','success');
+    } catch(err) { toast('Save failed: '+err.message,'error'); }
+  }
+
+  let tempLogoData = null;
+
+  function previewLogo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      tempLogoData = e.target.result;
+      const preview = document.getElementById('logoPreview');
+      preview.innerHTML = `<img src="${tempLogoData}" style="width:100%;height:100%;object-fit:contain;padding:4px">`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveLogo() {
+    if (!tempLogoData) { toast('Please select an image first.', 'error'); return; }
+    try {
+      await Settings.update({ site_logo: tempLogoData });
+      toast('Logo saved! 🎉 Refresh any page to see it.', 'success');
+      tempLogoData = null;
+    } catch(err) { toast('Save failed: ' + err.message, 'error'); }
+  }
+
+  async function removeLogo() {
+    if (!confirm('Remove the custom logo and go back to default?')) return;
+    try {
+      await Settings.update({ site_logo: '' });
+      document.getElementById('logoPreview').innerHTML = '<div id="logoPlaceholder" style="font-family:\'Bebas Neue\',cursive;font-size:2.5rem;color:var(--blue)">K</div>';
+      toast('Logo removed.', 'info');
+    } catch(err) { toast('Remove failed: ' + err.message, 'error'); }
+  }
+
+  function exportAll() {
+    toast('For full data export, use phpMyAdmin to export the kingyouth database as SQL or CSV.','info');
+  }
+
+  function clearData() {
+    toast('To clear all data, use phpMyAdmin to truncate the tables. This protects against accidental deletion.','info');
+  }
+
+  loadSettings();
+</script>
+</body>
+</html>

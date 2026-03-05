@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | Admin Login</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    .login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; background: var(--black); position: relative; overflow: hidden; }
+    .login-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 60% at 50% 50%, #0a1f4a 0%, transparent 70%); }
+    .login-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size: 60px 60px; opacity: .2; }
+    .login-card { position: relative; z-index: 1; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 3rem; width: 100%; max-width: 420px; box-shadow: 0 0 80px var(--blue-glow); }
+    .login-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 2rem; }
+    .login-logo-icon { width: 48px; height: 48px; background: var(--blue); clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue',cursive; font-size: 22px; color: #fff; flex-shrink: 0; }
+    .shake { animation: shake .4s ease; }
+    @keyframes shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-8px); } 40%,80% { transform:translateX(8px); } }
+  </style>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="login-card" id="loginCard">
+    <div class="login-logo">
+      <div class="login-logo-icon">K</div>
+      <div>
+        <div style="font-family:'Bebas Neue',cursive;font-size:1.7rem;letter-spacing:2px;line-height:1">King-Youth</div>
+        <div style="font-size:.55rem;color:var(--accent);letter-spacing:4px;text-transform:uppercase">GREATER</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:2.5rem;margin-bottom:.5rem">🔐</div>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:1.75rem;letter-spacing:2px;margin-bottom:.25rem">Admin Portal</h2>
+      <p style="color:var(--white-dim);font-size:.9rem">Sign in to manage the King-Youth platform</p>
+    </div>
+
+    <div class="form-group"><label class="form-label">Username</label><input class="form-input" type="text" id="loginUser" placeholder="admin" autocomplete="username"></div>
+    <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+    <p id="loginError" style="color:var(--danger);font-size:.85rem;margin-bottom:1rem;text-align:center;display:none">⚠️ Invalid credentials. Please try again.</p>
+    <button class="btn btn-primary" style="width:100%;padding:.85rem" onclick="doLogin()">Sign In</button>
+
+    <div style="text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+      <p style="font-size:.78rem;color:var(--white-dim)">Default: <code style="color:var(--accent)">admin</code> / <code style="color:var(--accent)">greater2025</code></p>
+    </div>
+    <div style="text-align:center;margin-top:1rem">
+      <a href="index.html" style="color:var(--white-dim);font-size:.85rem;text-decoration:none">← Back to website</a>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  // If already logged in, go to dashboard
+  if (isLoggedIn()) window.location.href = 'admin-dashboard.html';
+
+  document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+
+  async function doLogin() {
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    const btn = document.querySelector('.btn-primary');
+    btn.textContent = 'Signing in…'; btn.disabled = true;
+    try {
+      await adminLogin(u, p);
+      toast('Welcome back! 👋', 'success');
+      setTimeout(() => { window.location.href = 'admin-dashboard.html'; }, 500);
+    } catch {
+      document.getElementById('loginError').style.display = 'block';
+      const card = document.getElementById('loginCard');
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
+      btn.textContent = 'Sign In'; btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>King-Youth | Admin — Events</title>
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="page-wrap">
+<div class="admin-layout">
+  <div id="admin-nav-root"></div>
+  <main class="admin-content">
+    <div class="admin-top">
+      <h2 class="admin-page-title">Events</h2>
+      <button class="btn btn-primary" onclick="openEventModal()">+ New Event</button>
+    </div>
+    <div class="data-table-wrap">
+      <div style="overflow-x:auto">
+        <table><thead><tr><th>Event Name</th><th>Date</th><th>Location</th><th>Status</th><th>Registrations</th><th>Actions</th></tr></thead>
+        <tbody id="eventsBody"><tr><td colspan="6" style="text-align:center;color:var(--white-dim);padding:2rem">No events yet. Create your first event!</td></tr></tbody></table>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal" style="max-width:700px">
+    <button class="modal-close" onclick="closeModal('eventModal')">✕</button>
+    <h2 class="modal-title" id="eventModalTitle">Create New Event</h2>
+    <p class="modal-sub">Fill out all event details below.</p>
+    <form id="eventForm" onsubmit="saveEvent(event)">
+      <input type="hidden" id="editId">
+      <div class="form-grid">
+        <div class="form-group full"><label class="form-label">Event Name <span class="req">*</span></label><input class="form-input" id="evName" placeholder="Youth Camp 2025" required></div>
+        <div class="form-group"><label class="form-label">Event Date <span class="req">*</span></label><input class="form-input" type="date" id="evDate" required></div>
+        <div class="form-group"><label class="form-label">End Date</label><input class="form-input" type="date" id="evEndDate"></div>
+        <div class="form-group"><label class="form-label">Start Time</label><input class="form-input" type="time" id="evTime"></div>
+        <div class="form-group"><label class="form-label">Registration Deadline</label><input class="form-input" type="date" id="evDeadline"></div>
+        <div class="form-group full"><label class="form-label">Location / Venue <span class="req">*</span></label><input class="form-input" id="evLocation" placeholder="Camp venue, city" required></div>
+        <div class="form-group full"><label class="form-label">Description</label><textarea class="form-textarea" id="evDesc" rows="3" placeholder="Tell participants about this event..."></textarea></div>
+        <div class="form-group"><label class="form-label">Max Participants</label><input class="form-input" type="number" id="evMax" placeholder="100 (leave blank for unlimited)"></div>
+        <div class="form-group"><label class="form-label">Registration Fee</label><input class="form-input" id="evFee" placeholder="Free / ₱500"></div>
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-select" id="evStatus"><option value="open">Open</option><option value="upcoming">Upcoming</option><option value="closed">Closed</option></select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Event Images / Videos</label>
+          <div class="upload-zone" id="evUploadZone" onclick="document.getElementById('evMediaInput').click()">
+            <div class="upload-zone-icon">📁</div>
+            <div class="upload-zone-text">Click or drag files here to upload<br><span>Supports JPG, PNG, MP4, MOV</span></div>
+            <input type="file" id="evMediaInput" accept="image/*,video/*" multiple onchange="handleMediaUpload(this)">
+          </div>
+          <div class="upload-previews" id="evPreviews"></div>
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;display:flex;gap:1rem;justify-content:flex-end">
+        <button type="button" class="btn btn-outline" onclick="closeModal('eventModal')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Event</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="shared.js"></script>
+<script>
+  requireAdmin();
+  fetch('admin-nav.html').then(r=>r.text()).then(h=>{
+    document.getElementById('admin-nav-root').innerHTML=h;
+    document.querySelectorAll('.admin-nav-item[data-page]').forEach(a=>{ a.classList.toggle('active', a.dataset.page==='admin-events.html'); });
+  });
+  initModalOverlayClose();
+  initUploadZones();
+
+  let tempMedia = [];
+  let allEvents = [];
+
+  async function renderTable() {
+    const tbody = document.getElementById('eventsBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--white-dim);padding:2rem">Loading…</td></tr>';
+    try {
+      allEvents = await Events.getAll();
+      if (!allEvents.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--white-dim);padding:2rem">No events yet. Create your first event!</td></tr>'; return; }
+      tbody.innerHTML = allEvents.map(ev=>`
+        <tr>
+          <td>
+            ${ev.media&&ev.media.length&&ev.media[0].type==='image'?`<img src="${ev.media[0].data}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle">`:''}
+            <strong>${ev.name}</strong>
+          </td>
+          <td>${new Date(ev.date+'T00:00:00').toLocaleDateString()}</td>
+          <td>${ev.location||'—'}</td>
+          <td><span class="status-badge status-${ev.status}">${ev.status}</span></td>
+          <td>— / ${ev.max_participants}</td>
+          <td style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="action-btn" onclick="openEventModal(${ev.id})">Edit</button>
+            <button class="action-btn del" onclick="deleteEvent(${ev.id})">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch(e) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:2rem">Failed to load events</td></tr>'; }
+  }
+
+  function openEventModal(id=null) {
+    document.getElementById('eventModalTitle').textContent = id ? 'Edit Event' : 'Create New Event';
+    document.getElementById('editId').value = id||'';
+    tempMedia = [];
+    document.getElementById('evPreviews').innerHTML = '';
+    if (id) {
+      const ev = allEvents.find(e=>e.id===id);
+      if (ev) {
+        document.getElementById('evName').value     = ev.name;
+        document.getElementById('evDate').value     = ev.date;
+        document.getElementById('evEndDate').value  = ev.end_date||'';
+        document.getElementById('evTime').value     = ev.time||'';
+        document.getElementById('evDeadline').value = ev.deadline||'';
+        document.getElementById('evLocation').value = ev.location||'';
+        document.getElementById('evDesc').value     = ev.description||'';
+        document.getElementById('evMax').value      = ev.max_participants||'';
+        document.getElementById('evFee').value      = ev.fee||'';
+        document.getElementById('evStatus').value   = ev.status;
+        tempMedia = ev.media||[];
+        (ev.media||[]).forEach(m=>{ if(m.type==='image'){ const img=document.createElement('img'); img.src=m.data; img.className='upload-thumb'; document.getElementById('evPreviews').appendChild(img); } });
+      }
+    } else {
+      document.getElementById('eventForm').reset();
+    }
+    openModal('eventModal');
+  }
+
+  async function handleMediaUpload(input) {
+    const files = Array.from(input.files);
+    for (const file of files) {
+      const data = await readFileAsBase64(file);
+      const type = file.type.startsWith('image') ? 'image' : 'video';
+      tempMedia.push({ type, data, name: file.name });
+      if (type === 'image') {
+        const img = document.createElement('img'); img.src=data; img.className='upload-thumb';
+        document.getElementById('evPreviews').appendChild(img);
+      } else {
+        const div=document.createElement('div'); div.className='upload-thumb';
+        div.style.cssText='display:flex;align-items:center;justify-content:center;background:var(--dark);font-size:1.5rem'; div.textContent='🎥';
+        document.getElementById('evPreviews').appendChild(div);
+      }
+    }
+  }
+
+  async function saveEvent(e) {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    const payload = {
+      media:           tempMedia,
+      name:            document.getElementById('evName').value,
+      date:            document.getElementById('evDate').value,
+      end_date:        document.getElementById('evEndDate').value,
+      time:            document.getElementById('evTime').value,
+      deadline:        document.getElementById('evDeadline').value,
+      location:        document.getElementById('evLocation').value,
+      description:     document.getElementById('evDesc').value,
+      max_participants: document.getElementById('evMax').value,
+      fee:             document.getElementById('evFee').value,
+      status:          document.getElementById('evStatus').value
+    };
+    try {
+      if (id) await Events.update(id, payload);
+      else await Events.create(payload);
+      closeModal('eventModal');
+      toast('Event saved! 🎉', 'success');
+      renderTable();
+    } catch(err) { toast('Save failed: '+err.message,'error'); }
+  }
+
+  async function deleteEvent(id) {
+    if (!confirm('Delete this event? All registrations for it will also be removed.')) return;
+    try {
+      await Events.delete(id);
+      toast('Event deleted.', 'info');
+      renderTable();
+    } catch(err) { toast('Delete failed: '+err.message,'error'); }
+  }
+
+  renderTable();
+</script>
+</body>
+</html>
