@@ -36,8 +36,7 @@ const db = mysql.createPool({
 
 // ── Auth Middleware ────────────────────────────
 function authRequired(req, res, next) {
-  const token = req.headers['authorization']?.split(' ')[1] 
-    || req.query.token;
+  const token = req.headers['authorization']?.split(' ')[1] || req.query.token;
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
   try {
     req.admin = jwt.verify(token, JWT_SECRET);
@@ -46,6 +45,7 @@ function authRequired(req, res, next) {
     res.status(401).json({ error: 'Invalid token' });
   }
 }
+
 // ─────────────────────────────────────────────
 //  AUTH ROUTES
 // ─────────────────────────────────────────────
