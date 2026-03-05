@@ -29,21 +29,21 @@
 <div class="cart-sidebar" id="cartSidebar">
   <div class="cart-header">
     <span class="cart-title">Your Cart</span>
-    <button onclick="toggleCart()" style="background:none;border:none;color:var(--white-dim);cursor:pointer;font-size:1.25rem;padding:.25rem">✕</button>
+    <button id="cartCloseBtn" style="background:none;border:none;color:var(--white-dim);cursor:pointer;font-size:1.25rem;padding:.25rem">✕</button>
   </div>
   <div class="cart-body" id="cartBody">
     <div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>
   </div>
   <div class="cart-footer">
     <div class="cart-total"><span>Total</span><span id="cartTotal">₱0</span></div>
-    <button class="btn btn-primary" style="width:100%" onclick="openCheckout()">Proceed to Checkout</button>
+    <button class="btn btn-primary" style="width:100%" id="checkoutBtn">Proceed to Checkout</button>
   </div>
 </div>
 
 <!-- CHECKOUT MODAL -->
 <div class="modal-overlay" id="checkoutModal">
   <div class="modal" style="max-width:560px">
-    <button class="modal-close" onclick="closeModal('checkoutModal')">✕</button>
+    <button class="modal-close" id="checkoutCloseBtn">✕</button>
     <h2 class="modal-title">Checkout</h2>
     <div class="checkout-steps">
       <div class="step active" id="step1">1. Info</div>
@@ -56,15 +56,15 @@
       <div class="form-group"><label class="form-label">Contact Number <span class="req">*</span></label><input class="form-input" type="tel" id="coContact" placeholder="09XX-XXX-XXXX"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="coEmail" placeholder="email@example.com"></div>
       <div class="form-group"><label class="form-label">Delivery Address <span class="req">*</span></label><textarea class="form-textarea" id="coAddress" placeholder="Full address or 'Pickup at event'"></textarea></div>
-      <div style="text-align:right;margin-top:1rem"><button class="btn btn-primary" onclick="goStep2()">Next →</button></div>
+      <div style="text-align:right;margin-top:1rem"><button class="btn btn-primary" id="goStep2Btn">Next →</button></div>
     </div>
 
     <div id="coStep2" style="display:none">
       <div id="reviewItems"></div>
       <div style="display:flex;justify-content:space-between;margin:1rem 0;font-family:'Bebas Neue',cursive;font-size:1.4rem"><span>Total</span><span style="color:var(--accent)" id="reviewTotal">₱0</span></div>
       <div style="display:flex;gap:.75rem;justify-content:flex-end">
-        <button class="btn btn-outline" onclick="goStep1()">← Back</button>
-        <button class="btn btn-primary" onclick="placeOrder()">Place Order</button>
+        <button class="btn btn-outline" id="goStep1Btn">← Back</button>
+        <button class="btn btn-primary" id="placeOrderBtn">Place Order</button>
       </div>
     </div>
 
@@ -72,7 +72,7 @@
       <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
       <h3 style="font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:2px;margin-bottom:.5rem">Order Placed!</h3>
       <p style="color:var(--white-dim);font-size:.9rem">Thank you! The ministry will contact you for payment and delivery details.</p>
-      <button class="btn btn-primary" style="margin-top:1.5rem" onclick="closeModal('checkoutModal')">Done</button>
+      <button class="btn btn-primary" style="margin-top:1.5rem" id="orderDoneBtn">Done</button>
     </div>
   </div>
 </div>
@@ -150,33 +150,30 @@
   }
 
   function renderCartBody() {
-  const body = document.getElementById('cartBody');
-  if (!CART.length) { 
-    body.innerHTML='<div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>'; 
-    return; 
-  }
-  body.innerHTML = CART.map((item, i) => `
-    <div class="cart-item">
-      <div style="width:50px;height:50px;border-radius:6px;overflow:hidden;background:var(--dark);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">
-        ${item.image ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover">` : '👕'}
-      </div>
-      <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}${item.size ? ' — ' + item.size : ''}</div>
-        <div class="cart-item-price">₱${item.price.toLocaleString()} × ${item.qty}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-        <div class="qty-ctrl" style="transform:scale(0.85)">
-          <button class="qty-btn" onclick="changeCartQty(${i}, -1)">−</button>
-          <span class="qty-val">${item.qty}</span>
-          <button class="qty-btn" onclick="changeCartQty(${i}, 1)">+</button>
+    const body = document.getElementById('cartBody');
+    if (!CART.length) { body.innerHTML='<div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>'; return; }
+    body.innerHTML = CART.map((item,i)=>`
+      <div class="cart-item" data-idx="${i}">
+        <div style="width:50px;height:50px;border-radius:6px;overflow:hidden;background:var(--dark);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">
+          ${item.image?`<img src="${item.image}" style="width:100%;height:100%;object-fit:cover">`:'👕'}
         </div>
-        <button class="action-btn del" onclick="removeFromCart(${i})">✕ Remove</button>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}${item.size?' — '+item.size:''}</div>
+          <div class="cart-item-price">₱${item.price.toLocaleString()} × ${item.qty}</div>
+        </div>
+        <button class="action-btn del cart-remove-btn" data-idx="${i}" style="flex-shrink:0">✕</button>
       </div>
-    </div>
-  `).join('');
-  }
+    `).join('');
 
-  function removeFromCart(idx) { CART.splice(idx,1); saveCart(); updateCart(); }
+    // Attach remove button listeners via event delegation
+    body.querySelectorAll('.cart-remove-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.getAttribute('data-idx'));
+        CART.splice(idx, 1);
+        saveCart(); updateCart();
+      });
+    });
+  }
 
   function toggleCart() { document.getElementById('cartSidebar').classList.toggle('open'); renderCartBody(); }
 
@@ -192,7 +189,8 @@
     openModal('checkoutModal');
   }
 
-  function goStep2() {                                                                                                                                }ill in all required fields.','error'); return; }
+  function goStep2() {
+    if (!document.getElementById('coName').value||!document.getElementById('coContact').value||!document.getElementById('coAddress').value) { toast('Please fill in all required fields.','error'); return; }
     document.getElementById('coStep1').style.display='none';
     document.getElementById('coStep2').style.display='block';
     document.getElementById('step1').className='step done';
@@ -234,6 +232,22 @@
   }
 
   loadShop();
+
+  // Bind all button event listeners (avoids CSP inline handler blocks)
+  document.addEventListener('DOMContentLoaded', bindButtons);
+  // Also bind immediately in case DOMContentLoaded already fired
+  bindButtons();
+
+  function bindButtons() {
+    const safe = (id, fn) => { const el = document.getElementById(id); if (el && !el._bound) { el.addEventListener('click', fn); el._bound = true; } };
+    safe('cartCloseBtn',    () => toggleCart());
+    safe('checkoutBtn',     () => openCheckout());
+    safe('checkoutCloseBtn',() => closeModal('checkoutModal'));
+    safe('goStep2Btn',      () => goStep2());
+    safe('goStep1Btn',      () => goStep1());
+    safe('placeOrderBtn',   () => placeOrder());
+    safe('orderDoneBtn',    () => closeModal('checkoutModal'));
+  }
   updateCart();
 </script>
 </body>
