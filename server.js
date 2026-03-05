@@ -53,7 +53,10 @@ function authRequired(req, res, next) {
 // ─────────────────────────────────────────────
 //  AUTH ROUTES
 // ─────────────────────────────────────────────
-
+app.get('/api/hashtest', async (req, res) => {
+  const hash = await bcrypt.hash('greater2025', 10);
+  res.json({ hash });
+});
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
