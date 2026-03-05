@@ -50,7 +50,7 @@ function authRequired(req, res, next) {
 //  AUTH ROUTES
 // ─────────────────────────────────────────────
 app.get('/api/hashtest', async (req, res) => {
-	  const hash = await bcrypt.hash('greater2025', 10);
+	  const hash = await bcrypt.hash('kingsyouth2026', 10);
 	    res.json({ hash });
 	    });
 })
