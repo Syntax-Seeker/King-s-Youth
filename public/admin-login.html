@@ -37,7 +37,7 @@
     <div class="form-group"><label class="form-label">Username</label><input class="form-input" type="text" id="loginUser" placeholder="admin" autocomplete="username"></div>
     <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
     <p id="loginError" style="color:var(--danger);font-size:.85rem;margin-bottom:1rem;text-align:center;display:none">⚠️ Invalid credentials. Please try again.</p>
-    <button class="btn btn-primary" style="width:100%;padding:.85rem" id="LoginBtn">Sign In</button>
+    <button class="btn btn-primary" style="width:100%;padding:.85rem" onclick="doLogin()">Sign In</button>
 
     <div style="text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
       <p style="font-size:.78rem;color:var(--white-dim)">Default: <code style="color:var(--accent)">admin</code> / <code style="color:var(--accent)">greater2025</code></p>
@@ -71,7 +71,6 @@
       void card.offsetWidth;
       card.classList.add('shake');
       btn.textContent = 'Sign In'; btn.disabled = false;
-      document.getElementById('loginBtn').addEventListener('click', doLogin);
     }
   }
 </script>
