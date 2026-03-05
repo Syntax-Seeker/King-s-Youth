@@ -149,26 +149,7 @@
     renderCartBody();
   }
 
-  
-
-  function removeFromCart(idx) { CART.splice(idx,1); saveCart(); updateCart(); }
-
-  function toggleCart() { document.getElementById('cartSidebar').classList.toggle('open'); renderCartBody(); }
-
-  function openCheckout() {
-    if (!CART.length) { toast('Your cart is empty!','error'); return; }
-    document.getElementById('cartSidebar').classList.remove('open');
-    document.getElementById('coStep1').style.display='block';
-    document.getElementById('coStep2').style.display='none';
-    document.getElementById('coStep3').style.display='none';
-    document.getElementById('step1').className='step active';
-    document.getElementById('step2').className='step';
-    document.getElementById('step3').className='step';
-    openModal('checkoutModal');
-  }
-
-  function goStep2() {
-    if (!document.getElementById('coName').value||!document.getElementById('coContact').value||!document.getElementById('coAddress').value) { toast('Please ffunction renderCartBody() {
+  function renderCartBody() {
   const body = document.getElementById('cartBody');
   if (!CART.length) { 
     body.innerHTML='<div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>'; 
@@ -193,7 +174,25 @@
       </div>
     </div>
   `).join('');
-                                                                                                                                            }ill in all required fields.','error'); return; }
+  }
+
+  function removeFromCart(idx) { CART.splice(idx,1); saveCart(); updateCart(); }
+
+  function toggleCart() { document.getElementById('cartSidebar').classList.toggle('open'); renderCartBody(); }
+
+  function openCheckout() {
+    if (!CART.length) { toast('Your cart is empty!','error'); return; }
+    document.getElementById('cartSidebar').classList.remove('open');
+    document.getElementById('coStep1').style.display='block';
+    document.getElementById('coStep2').style.display='none';
+    document.getElementById('coStep3').style.display='none';
+    document.getElementById('step1').className='step active';
+    document.getElementById('step2').className='step';
+    document.getElementById('step3').className='step';
+    openModal('checkoutModal');
+  }
+
+  function goStep2() {                                                                                                                                }ill in all required fields.','error'); return; }
     document.getElementById('coStep1').style.display='none';
     document.getElementById('coStep2').style.display='block';
     document.getElementById('step1').className='step done';
