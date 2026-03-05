@@ -13,20 +13,35 @@
     </div>
   </a>
   <div class="nav-links">
-    <a href="index.html"    data-page="index.html">Home</a>
-    <a href="events.html"   data-page="events.html">Events</a>
-    <a href="shop.html"     data-page="shop.html">Merch</a>
-    <a href="about.html"    data-page="about.html">About</a>
+    <a href="index.html"  data-page="index.html">Home</a>
+    <a href="events.html" data-page="events.html">Events</a>
+    <a href="shop.html"   data-page="shop.html">Merch</a>
+    <a href="about.html"  data-page="about.html">About</a>
   </div>
   <div class="nav-actions">
-    <a href="shop.html" class="btn btn-outline" style="position:relative">
+    <button id="navCartBtn" class="btn btn-outline" style="position:relative;cursor:pointer">
       🛒 Cart
-      <span class="cart-badge" id="cartBadge">0</span>
-    </a>
+      <span class="cart-badge" id="cartBadge" style="display:none">0</span>
+    </button>
     <a href="admin-login.html" class="btn btn-primary">Admin</a>
   </div>
 </nav>
 <script>
+  // Cart button — open panel if on shop page, otherwise go to shop
+  (function() {
+    var btn = document.getElementById('navCartBtn');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        var isShop = window.location.pathname.indexOf('shop.html') !== -1;
+        if (isShop && typeof openCart === 'function') {
+          openCart();
+        } else {
+          window.location.href = 'shop.html';
+        }
+      });
+    }
+  })();
+
   // Load custom logo if set
   (async function loadNavLogo() {
     try {
@@ -37,9 +52,10 @@
         const icon = document.getElementById('navLogoIcon');
         if (icon) {
           icon.style.cssText = 'width:40px;height:40px;overflow:hidden;background:transparent;clip-path:none;padding:0';
-          icon.innerHTML = `<img src="${data.site_logo}" style="width:100%;height:100%;object-fit:contain">`;
+          icon.innerHTML = '<img src="' + data.site_logo + '" style="width:100%;height:100%;object-fit:contain">';
         }
       }
     } catch(e) {}
   })();
 </script>
+

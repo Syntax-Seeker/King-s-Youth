@@ -5,6 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>King-Youth | Merch Shop</title>
   <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Cart overlay */
+    .cart-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1400; }
+    .cart-overlay.open { display:block; }
+    /* Cart item styles */
+    .c-item { display:flex; gap:.75rem; padding:.875rem 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+    .c-item-img { width:52px; height:52px; border-radius:8px; background:var(--deep); overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; }
+    .c-item-img img { width:100%; height:100%; object-fit:cover; }
+    .c-item-info { flex:1; min-width:0; }
+    .c-item-name { font-weight:600; font-size:.9rem; margin-bottom:2px; }
+    .c-item-size { font-size:.78rem; color:var(--white-dim); margin-bottom:6px; }
+    .c-item-price { font-family:'Barlow Condensed',sans-serif; font-weight:700; color:var(--accent); font-size:.95rem; }
+    .c-item-controls { display:flex; align-items:center; gap:6px; margin-top:6px; }
+    .c-qty-btn { width:26px; height:26px; border:1px solid var(--border); background:var(--deep); color:var(--white); cursor:pointer; border-radius:4px; font-size:.9rem; display:flex; align-items:center; justify-content:center; }
+    .c-qty-num { min-width:24px; text-align:center; font-size:.9rem; font-weight:600; }
+    .c-remove { background:none; border:none; color:var(--danger,#ff3b5c); cursor:pointer; font-size:.8rem; margin-left:auto; padding:.25rem .5rem; border-radius:4px; }
+
+    /* Checkout Modal */
+    .co-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:2000; align-items:center; justify-content:center; padding:1rem; }
+    .co-overlay.open { display:flex; }
+    .co-box { background:var(--card); border:1px solid var(--border); border-radius:16px; width:100%; max-width:540px; max-height:90vh; overflow-y:auto; padding:2rem; position:relative; }
+    .co-close { position:absolute; top:1rem; right:1rem; background:none; border:1px solid var(--border); color:var(--white); cursor:pointer; width:32px; height:32px; border-radius:6px; font-size:1rem; }
+    .co-steps { display:flex; gap:.5rem; margin-bottom:1.5rem; }
+    .co-step { flex:1; padding:.5rem; text-align:center; border-radius:6px; font-family:'Barlow Condensed',sans-serif; font-size:.8rem; letter-spacing:1px; text-transform:uppercase; background:var(--deep); color:var(--white-dim); border:1px solid var(--border); }
+    .co-step.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+    .co-step.done { background:var(--success); color:#000; border-color:var(--success); }
+    .co-review-item { display:flex; justify-content:space-between; padding:.625rem 0; border-bottom:1px solid var(--border); font-size:.9rem; }
+    .co-review-total { display:flex; justify-content:space-between; padding:1rem 0 0; font-family:'Bebas Neue',cursive; font-size:1.5rem; }
+    .co-review-total span:last-child { color:var(--accent); }
+    .co-actions { display:flex; gap:.75rem; justify-content:flex-end; margin-top:1rem; }
+    .co-success { text-align:center; padding:2rem 0; }
+    .co-success .big-icon { font-size:4rem; margin-bottom:1rem; }
+  </style>
 </head>
 <body>
 <div id="nav-root"></div>
@@ -18,61 +51,72 @@
 
   <div class="section">
     <div class="shop-grid" id="shopGrid">
-      <div class="empty-state" style="grid-column:1/-1"><div class="icon">👕</div><h3>Merch Coming Soon</h3><p>The official GREATER collection will be available soon!</p></div>
+      <div class="empty-state" style="grid-column:1/-1"><div class="icon">⏳</div><h3>Loading...</h3></div>
     </div>
   </div>
 
   <div id="footer-root"></div>
 </div>
 
-<!-- CART SIDEBAR -->
-<div class="cart-sidebar" id="cartSidebar">
+<!-- CART OVERLAY + PANEL -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-sidebar" id="cartPanel">
   <div class="cart-header">
-    <span class="cart-title">Your Cart</span>
-    <button id="cartCloseBtn" style="background:none;border:none;color:var(--white-dim);cursor:pointer;font-size:1.25rem;padding:.25rem">✕</button>
+    <h3>🛒 Your Cart</h3>
+    <button style="background:none;border:none;color:var(--white-dim);cursor:pointer;font-size:1.25rem;padding:.25rem" id="cartCloseBtn">✕</button>
   </div>
-  <div class="cart-body" id="cartBody">
-    <div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>
+  <div class="cart-body" id="cartItemsWrap">
+    <div class="cart-empty"><div class="icon">🛒</div><p>Your cart is empty</p></div>
   </div>
   <div class="cart-footer">
-    <div class="cart-total"><span>Total</span><span id="cartTotal">₱0</span></div>
-    <button class="btn btn-primary" style="width:100%" id="checkoutBtn">Proceed to Checkout</button>
+    <div class="cart-total">
+      <span >Total</span>
+      <span style="font-family:Bebas Neue,cursive;font-size:1.75rem;color:var(--accent)" id="cartTotalVal">₱0</span>
+    </div>
+    <button class="btn btn-primary" id="cartCheckoutBtn">Proceed to Checkout →</button>
   </div>
 </div>
 
 <!-- CHECKOUT MODAL -->
-<div class="modal-overlay" id="checkoutModal">
-  <div class="modal" style="max-width:560px">
-    <button class="modal-close" id="checkoutCloseBtn">✕</button>
-    <h2 class="modal-title">Checkout</h2>
-    <div class="checkout-steps">
-      <div class="step active" id="step1">1. Info</div>
-      <div class="step" id="step2">2. Review</div>
-      <div class="step" id="step3">3. Done</div>
+<div class="co-overlay" id="coOverlay">
+  <div class="co-box">
+    <button class="co-close" id="coCloseBtn">✕</button>
+    <h2 style="font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:2px;margin-bottom:1.25rem">Checkout</h2>
+    <div class="co-steps">
+      <div class="co-step active" id="coStep1Ind">1. Your Info</div>
+      <div class="co-step" id="coStep2Ind">2. Review</div>
+      <div class="co-step" id="coStep3Ind">3. Done!</div>
     </div>
 
+    <!-- Step 1: Info -->
     <div id="coStep1">
       <div class="form-group"><label class="form-label">Full Name <span class="req">*</span></label><input class="form-input" id="coName" placeholder="Your full name"></div>
       <div class="form-group"><label class="form-label">Contact Number <span class="req">*</span></label><input class="form-input" type="tel" id="coContact" placeholder="09XX-XXX-XXXX"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="coEmail" placeholder="email@example.com"></div>
-      <div class="form-group"><label class="form-label">Delivery Address <span class="req">*</span></label><textarea class="form-textarea" id="coAddress" placeholder="Full address or 'Pickup at event'"></textarea></div>
-      <div style="text-align:right;margin-top:1rem"><button class="btn btn-primary" id="goStep2Btn">Next →</button></div>
-    </div>
-
-    <div id="coStep2" style="display:none">
-      <div id="reviewItems"></div>
-      <div style="display:flex;justify-content:space-between;margin:1rem 0;font-family:'Bebas Neue',cursive;font-size:1.4rem"><span>Total</span><span style="color:var(--accent)" id="reviewTotal">₱0</span></div>
-      <div style="display:flex;gap:.75rem;justify-content:flex-end">
-        <button class="btn btn-outline" id="goStep1Btn">← Back</button>
-        <button class="btn btn-primary" id="placeOrderBtn">Place Order</button>
+      <div class="form-group"><label class="form-label">Delivery Address <span class="req">*</span></label><textarea class="form-textarea" id="coAddress" rows="3" placeholder="Full address or 'Pickup at event'"></textarea></div>
+      <div style="text-align:right;margin-top:1.25rem">
+        <button class="btn btn-primary" id="coNextBtn">Next →</button>
       </div>
     </div>
 
-    <div id="coStep3" style="display:none;text-align:center;padding:2rem 0">
-      <div style="font-size:3rem;margin-bottom:1rem">🎉</div>
-      <h3 style="font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:2px;margin-bottom:.5rem">Order Placed!</h3>
-      <p style="color:var(--white-dim);font-size:.9rem">Thank you! The ministry will contact you for payment and delivery details.</p>
-      <button class="btn btn-primary" style="margin-top:1.5rem" id="orderDoneBtn">Done</button>
+    <!-- Step 2: Review -->
+    <div id="coStep2" style="display:none">
+      <div id="coReviewItems"></div>
+      <div class="co-review-total"><span>Total</span><span id="coReviewTotal">₱0</span></div>
+      <div class="co-actions">
+        <button class="btn btn-outline" id="coBackBtn">← Back</button>
+        <button class="btn btn-primary" id="coPlaceBtn">Place Order</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div id="coStep3" style="display:none">
+      <div class="co-success">
+        <div class="big-icon">🎉</div>
+        <h3 style="font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:2px;margin-bottom:.75rem">Order Placed!</h3>
+        <p style="color:var(--white-dim);margin-bottom:1.5rem">Thank you! The ministry will contact you soon for payment and delivery details.</p>
+        <button class="btn btn-primary" id="coDoneBtn">Done</button>
+      </div>
     </div>
   </div>
 </div>
@@ -80,175 +124,235 @@
 <div class="toast-container" id="toastContainer"></div>
 <script src="shared.js"></script>
 <script>
-  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); loadNavLogo();});
+  // ── Init nav and footer ──────────────────────
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
   fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; });
-  initModalOverlayClose();
 
   let allProducts = [];
 
+  // ── Load products from API ───────────────────
   async function loadShop() {
     try {
       allProducts = await Products.getAll();
       renderShop();
     } catch(e) {
-      document.getElementById('shopGrid').innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Could not load products</h3></div>';
+      document.getElementById('shopGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Could not load products</h3><p>Please try again later.</p></div>';
     }
   }
 
+  // ── Render product grid ──────────────────────
   function renderShop() {
     const grid = document.getElementById('shopGrid');
-    if (!allProducts.length) { grid.innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="icon">👕</div><h3>Merch Coming Soon</h3><p>Official GREATER collection will be available soon!</p></div>'; return; }
-    grid.innerHTML = allProducts.map(p=>`
-      <div class="product-card">
-        <div class="product-img">${p.images&&p.images.length?`<img src="${p.images[0]}" alt="${p.name}">`:'👕'}</div>
-        <div class="product-body">
-          <div class="product-name">${p.name}</div>
-          <div class="product-desc">${p.description||''}</div>
-          ${p.sizes&&p.sizes.length?`<div class="variant-btns" id="size_${p.id}">${p.sizes.map((s,i)=>`<button class="variant-btn${i===0?' active':''}" onclick="selectSize(this,'${p.id}')">${s}</button>`).join('')}</div>`:''}
-          <div class="product-price">₱${Number(p.price).toLocaleString()}</div>
-          <div class="product-footer">
-            <div class="qty-ctrl">
-              <button class="qty-btn" onclick="changeQty('${p.id}',-1)">−</button>
-              <span class="qty-val" id="qty_${p.id}">1</span>
-              <button class="qty-btn" onclick="changeQty('${p.id}',1)">+</button>
+    if (!allProducts.length) {
+      grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">👕</div><h3>Merch Coming Soon</h3><p>Official GREATER collection will be available soon!</p></div>';
+      return;
+    }
+    grid.innerHTML = allProducts.map(p => {
+      const sizes = p.sizes && p.sizes.length ? p.sizes : [];
+      return `
+        <div class="product-card">
+          <div class="product-img">${p.images && p.images.length ? '<img src="'+p.images[0]+'" alt="'+p.name+'">' : '👕'}</div>
+          <div class="product-body">
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.description || ''}</div>
+            ${sizes.length ? '<div class="variant-btns" id="sz_'+p.id+'">'+sizes.map((s,i)=>'<button class="variant-btn'+(i===0?' active':'')+'" data-pid="'+p.id+'" data-size="'+s+'">'+s+'</button>').join('')+'</div>' : ''}
+            <div class="product-price">₱${Number(p.price).toLocaleString()}</div>
+            <div class="product-footer">
+              <div class="qty-ctrl">
+                <button class="qty-btn" data-pid="${p.id}" data-action="minus">−</button>
+                <span class="qty-val" id="qv_${p.id}">1</span>
+                <button class="qty-btn" data-pid="${p.id}" data-action="plus">+</button>
+              </div>
+              <button class="btn btn-primary btn-sm" data-pid="${p.id}" data-action="addcart">Add to Cart</button>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="addToCart('${p.id}')">Add to Cart</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Shop grid click delegation ───────────────
+  document.getElementById('shopGrid').addEventListener('click', function(e) {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const pid = btn.getAttribute('data-pid');
+    const action = btn.getAttribute('data-action');
+    const size = btn.getAttribute('data-size');
+
+    if (size !== null) {
+      // Size button clicked
+      document.querySelectorAll('#sz_'+pid+' button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    } else if (action === 'minus') {
+      const el = document.getElementById('qv_'+pid);
+      el.textContent = Math.max(1, parseInt(el.textContent) - 1);
+    } else if (action === 'plus') {
+      const el = document.getElementById('qv_'+pid);
+      el.textContent = parseInt(el.textContent) + 1;
+    } else if (action === 'addcart') {
+      const p = allProducts.find(x => x.id == pid);
+      if (!p) return;
+      const qty = parseInt(document.getElementById('qv_'+pid).textContent);
+      const activeSize = document.querySelector('#sz_'+pid+' .active');
+      const chosenSize = activeSize ? activeSize.getAttribute('data-size') : '';
+      const idx = CART.findIndex(c => c.productId == pid && c.size === chosenSize);
+      if (idx >= 0) CART[idx].qty += qty;
+      else CART.push({ productId: pid, name: p.name, price: Number(p.price), qty, size: chosenSize, image: p.images && p.images[0] ? p.images[0] : '' });
+      saveCart();
+      refreshCart();
+      toast(p.name + ' added to cart! 🛒', 'success');
+      openCart();
+    }
+  });
+
+  // ── Cart open/close ──────────────────────────
+  function openCart() {
+    document.getElementById('cartPanel').classList.add('open');
+    document.getElementById('cartOverlay').classList.add('open');
+    refreshCart();
+  }
+
+  function closeCart() {
+    document.getElementById('cartPanel').classList.remove('open');
+    document.getElementById('cartOverlay').classList.remove('open');
+  }
+
+  // ── Refresh cart display ─────────────────────
+  function refreshCart() {
+    const wrap = document.getElementById('cartItemsWrap');
+    const total = CART.reduce((s, c) => s + c.price * c.qty, 0);
+    document.getElementById('cartTotalVal').textContent = '₱' + total.toLocaleString();
+    updateCartBadge();
+
+    if (!CART.length) {
+      wrap.innerHTML = '<div class="cart-empty"><div class="icon">🛒</div><p>Your cart is empty</p></div>';
+      return;
+    }
+
+    wrap.innerHTML = CART.map((item, i) => `
+      <div class="c-item">
+        <div class="c-item-img">${item.image ? '<img src="'+item.image+'">' : '👕'}</div>
+        <div class="c-item-info">
+          <div class="c-item-name">${item.name}</div>
+          ${item.size ? '<div class="c-item-size">Size: '+item.size+'</div>' : ''}
+          <div class="c-item-price">₱${item.price.toLocaleString()}</div>
+          <div class="c-item-controls">
+            <button class="c-qty-btn" data-idx="${i}" data-act="minus">−</button>
+            <span class="c-qty-num">${item.qty}</span>
+            <button class="c-qty-btn" data-idx="${i}" data-act="plus">+</button>
+            <button class="c-remove" data-idx="${i}" data-act="remove">🗑 Remove</button>
           </div>
         </div>
       </div>
     `).join('');
-  }
 
-  function selectSize(btn, pid) {
-    document.querySelectorAll(`#size_${pid} .variant-btn`).forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-  }
-
-  function changeQty(pid, dir) {
-    const el = document.getElementById('qty_'+pid);
-    let q = parseInt(el.textContent)+dir;
-    if (q<1) q=1; el.textContent=q;
-  }
-
-  function addToCart(pid) {
-    const p = allProducts.find(x=>x.id==pid);
-    if (!p) return;
-    const qty = parseInt(document.getElementById('qty_'+pid).textContent);
-    const sizeEl = document.querySelector(`#size_${pid} .variant-btn.active`);
-    const size = sizeEl ? sizeEl.textContent : '';
-    const idx = CART.findIndex(c=>c.productId==pid&&c.size===size);
-    if (idx>=0) CART[idx].qty+=qty;
-    else CART.push({productId:pid,name:p.name,price:Number(p.price),qty,size,image:p.images?.[0]||''});
-    saveCart(); updateCart(); toast(`${p.name} added to cart! 🛒`,'success');
-  }
-
-  function updateCart() {
-    const total = getCartTotal();
-    document.getElementById('cartTotal').textContent = '₱'+total.toLocaleString();
-    updateCartBadge();
-    renderCartBody();
-  }
-
-  function renderCartBody() {
-    const body = document.getElementById('cartBody');
-    if (!CART.length) { body.innerHTML='<div class="empty-state"><div class="icon">🛒</div><h3>Cart is Empty</h3><p>Add items from the shop</p></div>'; return; }
-    body.innerHTML = CART.map((item,i)=>`
-      <div class="cart-item" data-idx="${i}">
-        <div style="width:50px;height:50px;border-radius:6px;overflow:hidden;background:var(--dark);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem">
-          ${item.image?`<img src="${item.image}" style="width:100%;height:100%;object-fit:cover">`:'👕'}
-        </div>
-        <div class="cart-item-info">
-          <div class="cart-item-name">${item.name}${item.size?' — '+item.size:''}</div>
-          <div class="cart-item-price">₱${item.price.toLocaleString()} × ${item.qty}</div>
-        </div>
-        <button class="action-btn del cart-remove-btn" data-idx="${i}" style="flex-shrink:0">✕</button>
-      </div>
-    `).join('');
-
-    // Attach remove button listeners via event delegation
-    body.querySelectorAll('.cart-remove-btn').forEach(btn => {
+    // Bind cart item buttons
+    wrap.querySelectorAll('button[data-act]').forEach(btn => {
       btn.addEventListener('click', function() {
         const idx = parseInt(this.getAttribute('data-idx'));
-        CART.splice(idx, 1);
-        saveCart(); updateCart();
+        const act = this.getAttribute('data-act');
+        if (act === 'remove') {
+          CART.splice(idx, 1);
+        } else if (act === 'minus') {
+          CART[idx].qty--;
+          if (CART[idx].qty < 1) CART.splice(idx, 1);
+        } else if (act === 'plus') {
+          CART[idx].qty++;
+        }
+        saveCart();
+        refreshCart();
       });
     });
   }
 
-  function toggleCart() { document.getElementById('cartSidebar').classList.toggle('open'); renderCartBody(); }
-
+  // ── Checkout ─────────────────────────────────
   function openCheckout() {
-    if (!CART.length) { toast('Your cart is empty!','error'); return; }
-    document.getElementById('cartSidebar').classList.remove('open');
-    document.getElementById('coStep1').style.display='block';
-    document.getElementById('coStep2').style.display='none';
-    document.getElementById('coStep3').style.display='none';
-    document.getElementById('step1').className='step active';
-    document.getElementById('step2').className='step';
-    document.getElementById('step3').className='step';
-    openModal('checkoutModal');
+    if (!CART.length) { toast('Your cart is empty!', 'error'); return; }
+    closeCart();
+    // Reset to step 1
+    document.getElementById('coStep1').style.display = 'block';
+    document.getElementById('coStep2').style.display = 'none';
+    document.getElementById('coStep3').style.display = 'none';
+    document.getElementById('coStep1Ind').className = 'co-step active';
+    document.getElementById('coStep2Ind').className = 'co-step';
+    document.getElementById('coStep3Ind').className = 'co-step';
+    document.getElementById('coOverlay').classList.add('open');
   }
 
-  function goStep2() {
-    if (!document.getElementById('coName').value||!document.getElementById('coContact').value||!document.getElementById('coAddress').value) { toast('Please fill in all required fields.','error'); return; }
-    document.getElementById('coStep1').style.display='none';
-    document.getElementById('coStep2').style.display='block';
-    document.getElementById('step1').className='step done';
-    document.getElementById('step2').className='step active';
-    const total=getCartTotal();
-    document.getElementById('reviewTotal').textContent='₱'+total.toLocaleString();
-    document.getElementById('reviewItems').innerHTML=CART.map(it=>`
-      <div style="display:flex;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--border)">
-        <span>${it.name}${it.size?' ('+it.size+')':''} × ${it.qty}</span>
-        <span style="color:var(--accent);font-family:'Barlow Condensed',sans-serif;font-weight:700">₱${(it.price*it.qty).toLocaleString()}</span>
+  function closeCheckout() {
+    document.getElementById('coOverlay').classList.remove('open');
+  }
+
+  function goToStep2() {
+    const name = document.getElementById('coName').value.trim();
+    const contact = document.getElementById('coContact').value.trim();
+    const address = document.getElementById('coAddress').value.trim();
+    if (!name || !contact || !address) { toast('Please fill in all required fields.', 'error'); return; }
+
+    document.getElementById('coStep1').style.display = 'none';
+    document.getElementById('coStep2').style.display = 'block';
+    document.getElementById('coStep1Ind').className = 'co-step done';
+    document.getElementById('coStep2Ind').className = 'co-step active';
+
+    const total = CART.reduce((s, c) => s + c.price * c.qty, 0);
+    document.getElementById('coReviewTotal').textContent = '₱' + total.toLocaleString();
+    document.getElementById('coReviewItems').innerHTML = CART.map(it => `
+      <div class="co-review-item">
+        <span>${it.name}${it.size ? ' ('+it.size+')' : ''} × ${it.qty}</span>
+        <span style="color:var(--accent);font-weight:700">₱${(it.price*it.qty).toLocaleString()}</span>
       </div>
     `).join('');
   }
 
-  function goStep1() { document.getElementById('coStep1').style.display='block'; document.getElementById('coStep2').style.display='none'; document.getElementById('step1').className='step active'; document.getElementById('step2').className='step'; }
+  function goToStep1() {
+    document.getElementById('coStep1').style.display = 'block';
+    document.getElementById('coStep2').style.display = 'none';
+    document.getElementById('coStep1Ind').className = 'co-step active';
+    document.getElementById('coStep2Ind').className = 'co-step';
+  }
 
   async function placeOrder() {
-    const btn = document.querySelector('#coStep2 .btn-primary');
-    btn.textContent = 'Placing Order…'; btn.disabled = true;
-    const total = getCartTotal();
+    const btn = document.getElementById('coPlaceBtn');
+    btn.textContent = 'Placing…'; btn.disabled = true;
     try {
       await Orders.create({
         customer_name:    document.getElementById('coName').value,
         customer_phone:   document.getElementById('coContact').value,
         customer_email:   document.getElementById('coEmail').value,
         customer_address: document.getElementById('coAddress').value,
-        items: CART.map(c=>({name:c.name,size:c.size,qty:c.qty,price:c.price})),
-        total
+        items: CART.map(c => ({ name: c.name, size: c.size, qty: c.qty, price: c.price })),
+        total: CART.reduce((s, c) => s + c.price * c.qty, 0)
       });
-      CART.length = 0; saveCart(); updateCart();
-      document.getElementById('coStep2').style.display='none';
-      document.getElementById('coStep3').style.display='block';
-      document.getElementById('step2').className='step done';
-      document.getElementById('step3').className='step active';
-    } catch(e) {
-      toast('Order failed: '+e.message,'error');
+      CART.length = 0; saveCart(); refreshCart();
+      document.getElementById('coStep2').style.display = 'none';
+      document.getElementById('coStep3').style.display = 'block';
+      document.getElementById('coStep2Ind').className = 'co-step done';
+      document.getElementById('coStep3Ind').className = 'co-step active';
+    } catch(err) {
+      toast('Order failed: ' + err.message, 'error');
       btn.textContent = 'Place Order'; btn.disabled = false;
     }
   }
 
+  // ── Bind all static buttons ──────────────────
+  document.getElementById('cartCloseBtn').addEventListener('click', closeCart);
+  document.getElementById('cartOverlay').addEventListener('click', closeCart);
+  document.getElementById('cartCheckoutBtn').addEventListener('click', openCheckout);
+  document.getElementById('coCloseBtn').addEventListener('click', closeCheckout);
+  document.getElementById('coNextBtn').addEventListener('click', goToStep2);
+  document.getElementById('coBackBtn').addEventListener('click', goToStep1);
+  document.getElementById('coPlaceBtn').addEventListener('click', placeOrder);
+  document.getElementById('coDoneBtn').addEventListener('click', closeCheckout);
+
+  // ── Cart badge click opens cart ──────────────
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('#cartBadge') || e.target.closest('.cart-btn')) openCart();
+  });
+
+  // ── Init ─────────────────────────────────────
+  refreshCart();
   loadShop();
-
-  // Bind all button event listeners (avoids CSP inline handler blocks)
-  document.addEventListener('DOMContentLoaded', bindButtons);
-  // Also bind immediately in case DOMContentLoaded already fired
-  bindButtons();
-
-  function bindButtons() {
-    const safe = (id, fn) => { const el = document.getElementById(id); if (el && !el._bound) { el.addEventListener('click', fn); el._bound = true; } };
-    safe('cartCloseBtn',    () => toggleCart());
-    safe('checkoutBtn',     () => openCheckout());
-    safe('checkoutCloseBtn',() => closeModal('checkoutModal'));
-    safe('goStep2Btn',      () => goStep2());
-    safe('goStep1Btn',      () => goStep1());
-    safe('placeOrderBtn',   () => placeOrder());
-    safe('orderDoneBtn',    () => closeModal('checkoutModal'));
-  }
-  updateCart();
 </script>
 </body>
 </html>
+
