@@ -90,7 +90,7 @@
             ${ev.media&&ev.media.length&&ev.media[0].type==='image'?`<img src="${ev.media[0].data}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle">`:''}
             <strong>${ev.name}</strong>
           </td>
-          <td>${safeDate(ev.date)}</td>
+          <td>${safeDate(ev.date)}</td>,kjbgloyti
           <td>${ev.location||'—'}</td>
           <td><span class="status-badge status-${ev.status}">${ev.status}</span></td>
           <td>— / ${ev.max_participants}</td>
