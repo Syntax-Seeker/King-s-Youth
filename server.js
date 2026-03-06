@@ -51,7 +51,6 @@ function authRequired(req, res, next) {
 // ─────────────────────────────────────────────
 //  AUTH ROUTES
 // ─────────────────────────────────────────────
-//
 
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
@@ -341,7 +340,7 @@ app.get('/api/orders/export', authRequired, async (req, res) => {
 // GET /api/settings/public — logo and ministry name (no auth needed)
 app.get('/api/settings/public', async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM settings WHERE setting_key IN ('site_logo','ministry_name')");
+    const [rows] = await db.query("SELECT * FROM settings WHERE setting_key IN ('site_logo','ministry_name','ministry_email','ministry_phone','ministry_address')");
     const obj = {};
     rows.forEach(r => { obj[r.setting_key] = r.setting_value; });
     res.json(obj);

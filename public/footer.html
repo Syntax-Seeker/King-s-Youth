@@ -16,7 +16,7 @@
       <div class="footer-logo">
         <div class="footer-logo-icon">K</div>
         <div>
-          <div class="footer-logo-name">King-Youth</div>
+          <div class="footer-logo-name">King's-Youth</div>
           <div class="footer-logo-sub">GREATER</div>
         </div>
       </div>
@@ -64,9 +64,9 @@
     <div class="footer-col">
       <h4 class="footer-col-title">Contact</h4>
       <ul class="footer-contact-list">
-        <li><span class="contact-icon">📧</span><a href="mailto:kingyouth@ministry.org">kingyouth@ministry.org</a></li>
-        <li><span class="contact-icon">📱</span><span>09XX-XXX-XXXX</span></li>
-        <li><span class="contact-icon">📍</span><span>King's Ministry Center</span></li>
+        <li><span class="contact-icon">📧</span><a href="#" id="footerEmail">kingyouth@ministry.org</a></li>
+        <li><span class="contact-icon">📱</span><span id="footerPhone">09XX-XXX-XXXX</span></li>
+        <li><span class="contact-icon">📍</span><span id="footerAddress">King's Ministry Center</span></li>
       </ul>
     </div>
   </div>
@@ -112,6 +112,34 @@
 .footer-bottom-left, .footer-bottom-right { font-size: .8rem; color: var(--white-dim); }
 </style>
 <script>
+  // Set year
   const yearEl = document.getElementById('footerYear');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  // Load ministry info dynamically
+  (async function loadFooterInfo() {
+    try {
+      const res = await fetch('https://king-s-youth-production.up.railway.app/api/settings/public');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.ministry_email) {
+        const el = document.getElementById('footerEmail');
+        if (el) { el.textContent = data.ministry_email; el.href = 'mailto:' + data.ministry_email; }
+      }
+      if (data.ministry_phone) {
+        const el = document.getElementById('footerPhone');
+        if (el) el.textContent = data.ministry_phone;
+      }
+      if (data.ministry_address) {
+        const el = document.getElementById('footerAddress');
+        if (el) el.textContent = data.ministry_address;
+      }
+      if (data.ministry_name) {
+        const el = document.getElementById('footerYear');
+        if (el && el.parentElement) {
+          el.parentElement.innerHTML = '© <span id="footerYear">' + new Date().getFullYear() + '</span> ' + data.ministry_name + ' · GREATER · All Rights Reserved';
+        }
+      }
+    } catch(e) {}
+  })();
 </script>
