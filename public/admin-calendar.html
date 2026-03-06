@@ -94,7 +94,7 @@
   function showDay(ds) {
     const evs=calEvents.filter(e=>e.date===ds||(e.end_date&&e.date<=ds&&e.end_date>=ds));
     const panel=document.getElementById('dayPanel');
-    const d=new Date(ds+'T00:00:00');
+    const d=(function(s){const p=s.split('-');return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]))})(ds);
     document.getElementById('dayTitle').textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
     if (!evs.length) {
       document.getElementById('dayEvents').innerHTML='<p style="color:var(--white-dim);font-size:.9rem">No events on this day. <a href="admin-events.html" style="color:var(--accent)">Create one →</a></p>';

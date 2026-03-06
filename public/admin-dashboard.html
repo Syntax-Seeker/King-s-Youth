@@ -87,7 +87,7 @@
         eventsBody.innerHTML = events.slice(0,8).map(ev=>`
           <tr>
             <td><strong>${ev.name}</strong></td>
-            <td>${safeDate(ev.date)}</td>
+            <td>${formatDate(ev.date)}</td>
             <td>${ev.location||'—'}</td>
             <td><span class="status-badge status-${ev.status}">${ev.status}</span></td>
             <td>— / ${ev.max_participants}</td>

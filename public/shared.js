@@ -216,7 +216,10 @@ function eventCardHTML(ev) {
 
 function formatDate(d) {
   if (!d) return '';
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
+  const s = typeof d === 'string' ? d.substring(0, 10) : String(d);
+  const parts = s.split('-');
+  if (parts.length !== 3) return '';
+  return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
 }
 
 // ── CSV download ──────────────────────────────
@@ -251,7 +254,3 @@ async function loadNavLogo() {
       }
   } catch(e) {}
 }
-	  	            	            
-	  	          
-	  
-
