@@ -32,8 +32,6 @@ const db = mysql.createPool({
   waitForConnections: true,
   connectionLimit:    10,
   connectTimeout:     60000,
-  acquireTimeout:     60000,
-  timeout:            60000,
   keepAliveInitialDelay: 10000,
   enableKeepAlive: true
 });
