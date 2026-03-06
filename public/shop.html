@@ -125,7 +125,7 @@
 <script src="shared.js"></script>
 <script>
   // ── Init nav and footer ──────────────────────
-  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); }).then(() => { const nb = document.getElementById('navCartBtn'); if (nb) { nb.addEventListener('click', function(e){ e.preventDefault(); openCart(); }); } });
   fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; });
 
   let allProducts = [];
@@ -355,4 +355,3 @@
 </script>
 </body>
 </html>
-

@@ -19,24 +19,25 @@
     <a href="about.html"  data-page="about.html">About</a>
   </div>
   <div class="nav-actions">
-    <button id="navCartBtn" class="btn btn-outline" style="position:relative;cursor:pointer">
+    <a href="shop.html" id="navCartBtn" class="btn btn-outline" style="position:relative;cursor:pointer">
       🛒 Cart
       <span class="cart-badge" id="cartBadge" style="display:none">0</span>
-    </button>
+    </a>
     <a href="admin-login.html" class="btn btn-primary">Admin</a>
   </div>
 </nav>
 <script>
-  // Cart button — open panel if on shop page, otherwise go to shop
+  // If on shop page, make cart button open the panel instead of navigating
   (function() {
     var btn = document.getElementById('navCartBtn');
-    if (btn) {
-      btn.addEventListener('click', function() {
-        var isShop = window.location.pathname.indexOf('shop.html') !== -1;
-        if (isShop && typeof openCart === 'function') {
+    if (!btn) return;
+    var isShop = window.location.pathname.indexOf('shop.html') !== -1;
+    if (isShop) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Wait for openCart to be defined (shop.html defines it)
+        if (typeof openCart === 'function') {
           openCart();
-        } else {
-          window.location.href = 'shop.html';
         }
       });
     }
@@ -58,4 +59,3 @@
     } catch(e) {}
   })();
 </script>
-
