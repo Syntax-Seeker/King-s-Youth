@@ -47,7 +47,15 @@
   const STATUS_COLORS = { open:'var(--blue)', upcoming:'#8b5cf6', closed:'var(--border)' };
 
   async function loadAndRender() {
-    try { calEvents = await Events.getAll(); } catch(e) { calEvents = []; }
+    try { 
+      calEvents = await Events.getAll();
+      // Normalize dates to YYYY-MM-DD string (MySQL may return full ISO string)
+      calEvents = calEvents.map(e => ({
+        ...e,
+        date:     e.date     ? e.date.substring(0, 10) : e.date,
+        end_date: e.end_date ? e.end_date.substring(0, 10) : e.end_date
+      }));
+    } catch(e) { calEvents = []; }
     renderCalendar();
   }
 
