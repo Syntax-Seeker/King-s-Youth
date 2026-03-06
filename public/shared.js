@@ -199,7 +199,7 @@ function eventCardHTML(ev) {
         ${ev.fee > 0 ? `<span class="badge badge-gold">₱${Number(ev.fee).toLocaleString()}</span>` : '<span class="badge badge-success">FREE</span>'}
       </div>
       <h3 class="event-title">${ev.name}</h3>
-      <p class="event-detail">📅 ${formatDate(normDate(ev.date))}${ev.end_date ? ' – ' + formatDate(normDate(ev.end_date)) : ''}</p>
+      <p class="event-detail">📅 ${formatDate(ev.date ? String(ev.date).substring(0,10) : ev.date)}${ev.end_date ? ' – ' + formatDate(ev.end_date ? String(ev.end_date).substring(0,10) : ev.end_date) : ''}</p>
       ${ev.time ? `<p class="event-detail">🕐 ${ev.time}</p>` : ''}
       ${ev.location ? `<p class="event-detail">📍 ${ev.location}</p>` : ''}
       ${ev.description ? `<p class="event-desc">${ev.description}</p>` : ''}
