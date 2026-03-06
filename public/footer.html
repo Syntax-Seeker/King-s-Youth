@@ -16,7 +16,7 @@
       <div class="footer-logo">
         <div class="footer-logo-icon">K</div>
         <div>
-          <div class="footer-logo-name">King's-Youth</div>
+          <div class="footer-logo-name">King-Youth</div>
           <div class="footer-logo-sub">GREATER</div>
         </div>
       </div>
@@ -116,8 +116,8 @@
   const yearEl = document.getElementById('footerYear');
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Load ministry info dynamically
-  (async function loadFooterInfo() {
+  // Load ministry info - uses window so pages can call it after footer loads
+  window.loadFooterInfo = async function() {
     try {
       const res = await fetch('https://king-s-youth-production.up.railway.app/api/settings/public');
       if (!res.ok) return;
@@ -135,11 +135,10 @@
         if (el) el.textContent = data.ministry_address;
       }
       if (data.ministry_name) {
-        const el = document.getElementById('footerYear');
-        if (el && el.parentElement) {
-          el.parentElement.innerHTML = '© <span id="footerYear">' + new Date().getFullYear() + '</span> ' + data.ministry_name + ' · GREATER · All Rights Reserved';
-        }
+        const bottom = document.querySelector('.footer-bottom-left');
+        if (bottom) bottom.innerHTML = '&copy; ' + new Date().getFullYear() + ' ' + data.ministry_name + ' &middot; GREATER &middot; All Rights Reserved';
       }
-    } catch(e) {}
-  })();
+    } catch(e) { console.log('Footer load error:', e); }
+  };
+  window.loadFooterInfo();
 </script>

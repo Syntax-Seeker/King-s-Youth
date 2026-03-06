@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>King-Youth | About</title>
+  <title>King's-Youth | About</title>
   <link rel="stylesheet" href="shared.css">
   <style>
     .about-hero { background: var(--deep); border-bottom: 1px solid var(--border); padding: 5rem 2rem 3rem; text-align: center; }
@@ -27,7 +27,7 @@
 
   <div class="about-hero">
     <span style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent);font-weight:600">Who We Are</span>
-    <h1 style="font-family:'Bebas Neue',cursive;font-size:clamp(3rem,8vw,6rem);letter-spacing:3px;margin:.5rem 0">About <span style="color:var(--blue-light)">King's-Youth</span></h1>
+    <h1 style="font-family:'Bebas Neue',cursive;font-size:clamp(3rem,8vw,6rem);letter-spacing:3px;margin:.5rem 0">About <span style="color:var(--blue-light)">King-Youth</span></h1>
     <p style="color:var(--white-dim);max-width:600px;margin:0 auto;line-height:1.7">King's Youth Ministry — a community of young believers committed to growing in faith, serving one another, and making a lasting impact in our generation.</p>
   </div>
 
@@ -82,8 +82,8 @@
 <div class="toast-container" id="toastContainer"></div>
 <script src="shared.js"></script>
 <script>
-  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); loadNavLogo();});
-  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; });
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; }).then(()=>{ if(typeof loadFooterInfo==='function') loadFooterInfo(); });
 </script>
 </body>
 </html>
