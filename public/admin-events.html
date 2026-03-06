@@ -90,7 +90,13 @@
             ${ev.media&&ev.media.length&&ev.media[0].type==='image'?`<img src="${ev.media[0].data}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle">`:''}
             <strong>${ev.name}</strong>
           </td>
-          <td>${new Date(ev.date+'T00:00:00').toLocaleDateString()}</td>
+          <td>${function safeDate(d){
+            if (!d) return '—';
+              const s = typeof d === 'string' ? d.substring(0, 10) : d;
+              const [y, m, day] = s.split('-');
+            if (!y || !m || !day) return '—';
+              return new Date(parseInt(y), parseInt(m) - 1, parseInt(day)).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' });
+          }}</td>
           <td>${ev.location||'—'}</td>
           <td><span class="status-badge status-${ev.status}">${ev.status}</span></td>
           <td>— / ${ev.max_participants}</td>
