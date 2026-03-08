@@ -31,6 +31,29 @@
     .event-spots-bar { margin: .75rem 0 .4rem; }
     .event-card-footer { display: flex; gap: .6rem; margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border); }
     .event-card-footer .btn { flex: 1; padding: .5rem; font-size: .82rem; text-align: center; }
+    .ev-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:2000; align-items:center; justify-content:center; padding:1rem; }
+    .ev-modal-overlay.open { display:flex; }
+    .ev-modal-box { background:var(--card); border:1px solid var(--border); border-radius:20px; width:100%; max-width:680px; max-height:90vh; overflow-y:auto; position:relative; }
+    .ev-modal-hero { width:100%; height:240px; background:var(--deep); border-radius:20px 20px 0 0; overflow:hidden; position:relative; }
+    .ev-modal-hero img { width:100%; height:100%; object-fit:cover; }
+    .ev-modal-hero-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:5rem; background:linear-gradient(135deg,var(--deep),var(--black)); }
+    .ev-modal-body { padding:2rem; }
+    .ev-modal-close { position:absolute; top:1rem; right:1rem; background:rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.2); color:#fff; width:36px; height:36px; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; z-index:10; }
+    .ev-modal-badges { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1rem; }
+    .ev-modal-title { font-family:'Bebas Neue',cursive; font-size:2.2rem; letter-spacing:2px; margin-bottom:1rem; line-height:1.1; }
+    .ev-modal-details { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:1.5rem; }
+    .ev-modal-detail-item { display:flex; align-items:flex-start; gap:.5rem; font-size:.9rem; color:var(--white-dim); }
+    .ev-modal-desc-label { font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:.75rem; letter-spacing:3px; text-transform:uppercase; color:var(--accent); margin-bottom:.5rem; }
+    .ev-modal-desc { font-size:.95rem; line-height:1.8; color:var(--white-dim); white-space:pre-wrap; margin-bottom:1.5rem; background:var(--deep); border:1px solid var(--border); border-radius:10px; padding:1rem; }
+    .ev-session-card { background:var(--deep); border:1px solid var(--border); border-radius:10px; padding:.875rem 1rem; margin-bottom:.5rem; display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+    .ev-session-name { font-weight:600; font-size:.95rem; }
+    .ev-session-info { font-size:.8rem; color:var(--white-dim); margin-top:2px; }
+    .ev-session-spots { font-family:'Barlow Condensed',sans-serif; font-size:.85rem; color:var(--accent); white-space:nowrap; flex-shrink:0; }
+    .ev-modal-footer { display:flex; gap:.75rem; justify-content:flex-end; flex-wrap:wrap; padding-top:1rem; border-top:1px solid var(--border); }
+    .cap-bar-wrap { margin-bottom:1.25rem; }
+    .cap-bar { height:6px; background:var(--deep); border-radius:3px; overflow:hidden; margin-bottom:4px; }
+    .cap-fill { height:100%; background:var(--blue); border-radius:3px; }
+    .cap-label { font-size:.78rem; color:var(--white-dim); }
     .stats-strip-inner { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 2rem; text-align: center; }
     .stat-num { font-family: 'Bebas Neue',cursive; font-size: 3rem; line-height: 1; }
     .stat-lbl { color: var(--white-dim); font-size: .85rem; letter-spacing: 2px; text-transform: uppercase; margin-top: .25rem; }
@@ -100,15 +123,100 @@
   fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); loadNavLogo(); });
   fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; loadFooterInfo(); });
 
+  let homeEvents = [];
+
+  // ── Event detail modal ───────────────────────
+  async function openEventDetail(id) {
+    const ev = homeEvents.find(e => e.id === id);
+    if (!ev) return;
+    const statusClass = {open:'success',upcoming:'info',closed:'danger'}[ev.status]||'info';
+    const maxP = parseInt(ev.max_participants) || 0;
+    const reg  = parseInt(ev.registered) || 0;
+    const spotsLeft = maxP > 0 ? maxP - reg : null;
+    const pct = maxP > 0 ? Math.min(100, Math.round(reg / maxP * 100)) : 0;
+
+    const heroImg = Array.isArray(ev.media) ? ev.media[0] : (typeof ev.media==='string'&&ev.media.startsWith('data:') ? ev.media : null);
+    document.getElementById('evModalHero').innerHTML = heroImg
+      ? '<img src="' + heroImg + '" alt="' + ev.name + '">'
+      : '<div class="ev-modal-hero-placeholder">&#x1F4C5;</div>';
+
+    document.getElementById('evModalBadges').innerHTML =
+      '<span class="badge badge-' + statusClass + '">' + ev.status + '</span>' +
+      (Number(ev.fee) > 0 ? '<span class="badge badge-gold">&#x20B1;' + Number(ev.fee).toLocaleString() + '</span>' : '<span class="badge badge-success">FREE</span>');
+
+    document.getElementById('evModalTitle').textContent = ev.name;
+
+    const dets = [];
+    if (ev.date) dets.push(['&#x1F4C5;', formatDate(ev.date) + (ev.end_date ? ' – ' + formatDate(ev.end_date) : '')]);
+    if (ev.time) dets.push(['&#x1F550;', ev.time]);
+    if (ev.location) dets.push(['&#x1F4CD;', ev.location]);
+    if (ev.deadline) dets.push(['&#x23F3;', 'Deadline: ' + formatDate(ev.deadline)]);
+    document.getElementById('evModalDetails').innerHTML = dets.map(function(d) {
+      return '<div class="ev-modal-detail-item"><span>' + d[0] + '</span><span>' + d[1] + '</span></div>';
+    }).join('');
+
+    if (spotsLeft !== null) {
+      document.getElementById('evModalCapacity').innerHTML =
+        '<div class="cap-bar"><div class="cap-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="cap-label">' + (spotsLeft > 0 ? spotsLeft + ' spots left of ' + maxP : '⚠️ FULL') + '</span>';
+    } else {
+      document.getElementById('evModalCapacity').innerHTML = '';
+    }
+
+    if (ev.description && ev.description.trim()) {
+      document.getElementById('evModalDescWrap').style.display = 'block';
+      document.getElementById('evModalDesc').textContent = ev.description;
+    } else {
+      document.getElementById('evModalDescWrap').style.display = 'none';
+    }
+
+    const sessWrap = document.getElementById('evModalSessionsWrap');
+    sessWrap.style.display = 'none';
+    try {
+      const sessions = await Sessions.getByEvent(id);
+      if (sessions && sessions.length) {
+        sessWrap.style.display = 'block';
+        document.getElementById('evModalSessions').innerHTML = sessions.map(function(s) {
+          const info = [s.date ? formatDate(String(s.date).substring(0,10)) : '', s.time||''].filter(Boolean).join(' · ');
+          return '<div class="ev-session-card">' +
+            '<div><div class="ev-session-name">' + s.name + '</div>' +
+            (info ? '<div class="ev-session-info">' + info + '</div>' : '') +
+            (s.description ? '<div class="ev-session-info" style="font-style:italic">' + s.description + '</div>' : '') +
+            '</div>' +
+            (s.max_participants ? '<div class="ev-session-spots">' + s.max_participants + ' slots</div>' : '') +
+            '</div>';
+        }).join('');
+      }
+    } catch(e) {}
+
+    document.getElementById('evModalFooter').innerHTML = ev.status === 'open' && spotsLeft > 0
+      ? '<a href="register.html?event=' + ev.id + '" class="btn btn-primary">Register Now →</a>'
+      : '<span class="btn btn-ghost" style="cursor:default">' + (ev.status === 'open' ? 'Event Full' : 'Registration Closed') + '</span>';
+
+    document.getElementById('evDetailModal').classList.add('open');
+  }
+
+  document.getElementById('evModalCloseBtn').addEventListener('click', function() {
+    document.getElementById('evDetailModal').classList.remove('open');
+  });
+  document.getElementById('evDetailModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+  document.getElementById('homeEventsGrid').addEventListener('click', function(e) {
+    const btn = e.target.closest('.view-details-btn');
+    if (btn) openEventDetail(parseInt(btn.dataset.id));
+  });
+
+  // ── Load home data ────────────────────────────
   async function loadHome() {
     try {
       const [stats, events] = await Promise.all([Stats.get(), Events.getAll()]);
+      homeEvents = events;
 
       document.getElementById('statReg').textContent    = stats.registrations;
       document.getElementById('statEvents').textContent = stats.events;
       document.getElementById('statMerch').textContent  = stats.products;
 
-      // Simple next-event pill — no date math, just name + date string
       const next = events.find(e => e.status !== 'closed');
       if (next) {
         const pill = document.getElementById('heroPill');
@@ -118,8 +226,8 @@
       }
 
       const grid = document.getElementById('homeEventsGrid');
-      const upcoming = events.filter(e=>e.status!=='closed').slice(0,3);
-      if (upcoming.length) grid.innerHTML = upcoming.map(ev=>eventCardHTML(ev)).join('');
+      const upcoming = events.filter(e => e.status !== 'closed').slice(0,3);
+      if (upcoming.length) grid.innerHTML = upcoming.map(ev => eventCardHTML(ev)).join('');
     } catch(e) {
       console.warn('Could not load live data', e);
     }
@@ -127,5 +235,27 @@
 
   loadHome();
 </script>
+<!-- EVENT DETAIL MODAL -->
+<div class="ev-modal-overlay" id="evDetailModal">
+  <div class="ev-modal-box">
+    <button class="ev-modal-close" id="evModalCloseBtn">✕</button>
+    <div class="ev-modal-hero" id="evModalHero"><div class="ev-modal-hero-placeholder">📅</div></div>
+    <div class="ev-modal-body">
+      <div class="ev-modal-badges" id="evModalBadges"></div>
+      <div class="ev-modal-title" id="evModalTitle"></div>
+      <div class="ev-modal-details" id="evModalDetails"></div>
+      <div class="cap-bar-wrap" id="evModalCapacity"></div>
+      <div id="evModalDescWrap" style="display:none">
+        <div class="ev-modal-desc-label">About This Event</div>
+        <div class="ev-modal-desc" id="evModalDesc"></div>
+      </div>
+      <div id="evModalSessionsWrap" style="display:none">
+        <div class="ev-modal-desc-label" style="margin-bottom:.75rem">Divided Sessions</div>
+        <div id="evModalSessions"></div>
+      </div>
+      <div class="ev-modal-footer" id="evModalFooter"></div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
