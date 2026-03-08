@@ -192,7 +192,7 @@ app.get('/api/registrations', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
     let sql = `SELECT r.*, e.name as event_name,
-               (SELECT s.name FROM event_sessions s WHERE s.id = r.session_id LIMIT 1) as session_name
+               (SELECT GROUP_CONCAT(s.name ORDER BY s.session_order SEPARATOR ', ') FROM event_sessions s WHERE FIND_IN_SET(s.id, r.session_id)) as session_name
                FROM registrations r
                LEFT JOIN events e ON r.event_id = e.id`;
     const params = [];
@@ -243,7 +243,7 @@ app.get('/api/registrations/export', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
     let sql = `SELECT r.*, e.name as event_name,
-               (SELECT s.name FROM event_sessions s WHERE s.id = r.session_id LIMIT 1) as session_name
+               (SELECT GROUP_CONCAT(s.name ORDER BY s.session_order SEPARATOR ', ') FROM event_sessions s WHERE FIND_IN_SET(s.id, r.session_id)) as session_name
                FROM registrations r
                LEFT JOIN events e ON r.event_id = e.id`;
     const params = [];
@@ -267,7 +267,7 @@ app.get('/api/registrations/export-json', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
     let sql = `SELECT r.*, e.name as event_name,
-               (SELECT s.name FROM event_sessions s WHERE s.id = r.session_id LIMIT 1) as session_name
+               (SELECT GROUP_CONCAT(s.name ORDER BY s.session_order SEPARATOR ', ') FROM event_sessions s WHERE FIND_IN_SET(s.id, r.session_id)) as session_name
                FROM registrations r
                LEFT JOIN events e ON r.event_id = e.id`;
     const params = [];
@@ -337,7 +337,7 @@ app.delete('/api/sessions/:id', authRequired, async (req, res) => {
 // GET /api/sessions/:id/count
 app.get('/api/sessions/:id/count', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT COUNT(*) as count FROM registrations WHERE session_id=?', [req.params.id]);
+    const [rows] = await db.query('SELECT COUNT(*) as count FROM registrations WHERE FIND_IN_SET(?, session_id)', [req.params.id]);
     res.json({ count: rows[0].count });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
