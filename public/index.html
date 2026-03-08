@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>King's-Youth | GREATER — Home</title>
+  <title>King-Youth | GREATER — Home</title>
   <link rel="stylesheet" href="shared.css">
   <style>
     .hero { min-height: 100vh; background: var(--black); position: relative; overflow: hidden; display: flex; align-items: center; }
@@ -40,7 +40,7 @@
     <div class="hero-content">
       <div class="hero-eyebrow">King's Youth Ministry</div>
       <h1 class="hero-title">GREATER</h1>
-      <p class="hero-sub">GREATER: Assignment, GREATER: Involvement, GREATER: Movement</p>
+      <p class="hero-sub">A generation rising. A movement igniting. Come be part of something greater than yourself.</p>
       <div class="hero-actions">
         <a href="register.html" class="btn btn-primary btn-lg">Register Now</a>
         <a href="events.html"   class="btn btn-outline btn-lg">View Events</a>
@@ -99,8 +99,8 @@
 <div class="toast-container" id="toastContainer"></div>
 <script src="shared.js"></script>
 <script>
-  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); loadNavLogo();});
-  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; }).then(()=>{ if(typeof loadFooterInfo==='function') loadFooterInfo(); });
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; loadFooterInfo(); });
 
   async function loadHome() {
     try {

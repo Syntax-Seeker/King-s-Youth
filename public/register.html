@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>King's-Youth | Register</title>
+  <title>King-Youth | Register</title>
   <link rel="stylesheet" href="shared.css">
   <style>
     .reg-hero { background: var(--deep); border-bottom: 1px solid var(--border); padding: 5rem 2rem 3rem; text-align: center; }
@@ -58,6 +58,11 @@
           <div class="form-group full"><label class="form-label">Select Event <span class="req">*</span></label>
             <select class="form-select" id="rEvent" required><option value="">Select Event</option></select>
           </div>
+          <div class="form-group full" id="sessionPickerWrap" style="display:none">
+            <label class="form-label">Select Session <span class="req">*</span></label>
+            <select class="form-select" id="rSession"><option value="">— No preference / No sessions —</option></select>
+            <p style="font-size:.8rem;color:var(--white-dim);margin-top:.35rem">This event has divided sessions. Please choose your preferred session.</p>
+          </div>
         </div>
 
         <div class="form-section-title">Emergency Contact</div>
@@ -106,7 +111,7 @@
 <script src="shared.js"></script>
 <script>
   fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
-  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; }).then(()=>{ if(typeof loadFooterInfo==='function') loadFooterInfo(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; loadFooterInfo(); });
 
   let allEvents = [];
 
@@ -127,11 +132,37 @@
         // Pre-select from URL param
         const params = new URLSearchParams(location.search);
         const pid = params.get('event') || params.get('eventId');
-        if (pid) evSel.value = pid;
+        if (pid) { evSel.value = pid; await loadSessions(pid); }
       }
     } catch(e) {
       toast('Could not load events', 'error');
     }
+  }
+
+  // Load sessions when event is selected
+  document.getElementById('rEvent').addEventListener('change', function() {
+    loadSessions(this.value);
+  });
+
+  async function loadSessions(eventId) {
+    const wrap = document.getElementById('sessionPickerWrap');
+    const sel = document.getElementById('rSession');
+    sel.innerHTML = '<option value="">— No preference —</option>';
+    wrap.style.display = 'none';
+    if (!eventId) return;
+    try {
+      const sessions = await Sessions.getByEvent(eventId);
+      if (sessions && sessions.length) {
+        sessions.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          const info = [s.date ? formatDate(String(s.date).substring(0,10)) : '', s.time||''].filter(Boolean).join(' · ');
+          opt.textContent = s.name + (info ? ' (' + info + ')' : '') + (s.max_participants ? ' — ' + s.max_participants + ' slots' : '');
+          sel.appendChild(opt);
+        });
+        wrap.style.display = 'block';
+      }
+    } catch(e) {}
   }
 
   async function submitReg(e) {
@@ -155,6 +186,7 @@
       church_name:                document.getElementById('rChurch').value.trim(),
       pastor_name:                document.getElementById('rCellGroup')?.value.trim() || '',
       church_phone:               document.getElementById('rChurchDuration')?.value || '',
+      session_id:                 document.getElementById('rSession')?.value || null,
       emergency_contact_name:     document.getElementById('rEmergName').value.trim(),
       emergency_contact_phone:    document.getElementById('rEmergContact').value.trim(),
       emergency_contact_relation: document.getElementById('rRelation').value.trim(),

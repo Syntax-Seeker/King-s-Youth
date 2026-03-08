@@ -160,8 +160,9 @@ app.get('/api/events/:id/registration-count', async (req, res) => {
 app.get('/api/registrations', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
-    let sql = `SELECT r.*, e.name as event_name FROM registrations r
-               LEFT JOIN events e ON r.event_id = e.id`;
+    let sql = `SELECT r.*, e.name as event_name, s.name as session_name FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id
+               LEFT JOIN event_sessions s ON r.session_id = s.id`;
     const params = [];
     if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
     sql += ' ORDER BY r.registered_at DESC';
@@ -184,11 +185,11 @@ app.post('/api/registrations', async (req, res) => {
     }
     const [result] = await db.query(
       `INSERT INTO registrations
-       (event_id,first_name,last_name,age,gender,phone,email,address,city,province,postal_code,
+       (event_id,session_id,first_name,last_name,age,gender,phone,email,address,city,province,postal_code,
         church_name,pastor_name,church_phone,emergency_contact_name,emergency_contact_phone,
         emergency_contact_relation,medical_conditions,consent_liability,consent_photo,consent_rules)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-      [f.event_id||null, f.first_name, f.last_name, f.age||null, f.gender, f.phone, f.email,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [f.event_id||null, f.session_id||null, f.first_name, f.last_name, f.age||null, f.gender, f.phone, f.email,
        f.address, f.city, f.province, f.postal_code, f.church_name, f.pastor_name, f.church_phone,
        f.emergency_contact_name, f.emergency_contact_phone, f.emergency_contact_relation,
        f.medical_conditions||'', f.consent_liability?1:0, f.consent_photo?1:0, f.consent_rules?1:0]
@@ -209,12 +210,13 @@ app.delete('/api/registrations/:id', authRequired, async (req, res) => {
 app.get('/api/registrations/export', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
-    let sql = `SELECT r.*, e.name as event_name FROM registrations r
-               LEFT JOIN events e ON r.event_id = e.id`;
+    let sql = `SELECT r.*, e.name as event_name, s.name as session_name FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id
+               LEFT JOIN event_sessions s ON r.session_id = s.id`;
     const params = [];
     if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
     const [rows] = await db.query(sql, params);
-    const cols = ['id','event_name','first_name','last_name','age','gender','phone','email',
+    const cols = ['id','event_name','session_name','first_name','last_name','age','gender','phone','email',
                   'address','city','province','postal_code','church_name','pastor_name','church_phone',
                   'emergency_contact_name','emergency_contact_phone','emergency_contact_relation',
                   'medical_conditions','consent_liability','consent_photo','consent_rules','registered_at'];
@@ -224,6 +226,76 @@ app.get('/api/registrations/export', authRequired, async (req, res) => {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="registrations_${Date.now()}.csv"`);
     res.send(csv);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/registrations/export-json — for Excel download on client side (admin only)
+app.get('/api/registrations/export-json', authRequired, async (req, res) => {
+  try {
+    const { event_id } = req.query;
+    let sql = `SELECT r.*, e.name as event_name, s.name as session_name FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id
+               LEFT JOIN event_sessions s ON r.session_id = s.id`;
+    const params = [];
+    if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
+    sql += ' ORDER BY r.registered_at DESC';
+    const [rows] = await db.query(sql, params);
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+
+// ─────────────────────────────────────────────
+//  SESSIONS ROUTES (divided sessions per event)
+// ─────────────────────────────────────────────
+
+// GET /api/events/:id/sessions
+app.get('/api/events/:id/sessions', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM event_sessions WHERE event_id=? ORDER BY session_order ASC, id ASC', [req.params.id]);
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/events/:id/sessions (admin only)
+app.post('/api/events/:id/sessions', authRequired, async (req, res) => {
+  const { name, description, date, time, max_participants, session_order } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO event_sessions (event_id, name, description, date, time, max_participants, session_order) VALUES (?,?,?,?,?,?,?)',
+      [req.params.id, name, description||'', date||null, time||null, max_participants||null, session_order||0]
+    );
+    const [rows] = await db.query('SELECT * FROM event_sessions WHERE id=?', [result.insertId]);
+    res.status(201).json(rows[0]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// PUT /api/sessions/:id (admin only)
+app.put('/api/sessions/:id', authRequired, async (req, res) => {
+  const { name, description, date, time, max_participants, session_order } = req.body;
+  try {
+    await db.query(
+      'UPDATE event_sessions SET name=?, description=?, date=?, time=?, max_participants=?, session_order=? WHERE id=?',
+      [name, description||'', date||null, time||null, max_participants||null, session_order||0, req.params.id]
+    );
+    const [rows] = await db.query('SELECT * FROM event_sessions WHERE id=?', [req.params.id]);
+    res.json(rows[0]);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/sessions/:id (admin only)
+app.delete('/api/sessions/:id', authRequired, async (req, res) => {
+  try {
+    await db.query('DELETE FROM event_sessions WHERE id=?', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/sessions/:id/count
+app.get('/api/sessions/:id/count', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT COUNT(*) as count FROM registrations WHERE session_id=?', [req.params.id]);
+    res.json({ count: rows[0].count });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -402,6 +474,11 @@ function parseJSON(fields) {
 // ─────────────────────────────────────────────
 //  START
 // ─────────────────────────────────────────────
+// Keep DB alive
+setInterval(async () => {
+  try { await db.query('SELECT 1'); } catch(e) {}
+}, 4 * 60 * 1000);
+
 app.listen(PORT, () => {
   console.log(`✅ GREATER API running on port ${PORT}`);
 });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>King's-Youth | About</title>
+  <title>King-Youth | About</title>
   <link rel="stylesheet" href="shared.css">
   <style>
     .about-hero { background: var(--deep); border-bottom: 1px solid var(--border); padding: 5rem 2rem 3rem; text-align: center; }
@@ -57,8 +57,8 @@
     <div class="value-grid">
       <div class="value-card"><div class="icon">🙏</div><h3>Faith</h3><p>A deep, rooted relationship with God is the foundation of everything we do as a ministry.</p></div>
       <div class="value-card"><div class="icon">🤝</div><h3>Community</h3><p>We believe in the power of authentic, life-giving community where everyone belongs.</p></div>
-      <div class="value-card"><div class="icon">🔥</div><h3>Vision</h3><p>To Preach the Gospel and send Deciples Throughout the nation.</p></div>
-      <div class="value-card"><div class="icon">🌍</div><h3>Mission</h3><p>To Evangelize, Edify Believers, and Equip God's servant to preach the Good News and pioneer churches.</p></div>
+      <div class="value-card"><div class="icon">🔥</div><h3>Passion</h3><p>We pursue God with all our hearts — in worship, in service, and in everyday life.</p></div>
+      <div class="value-card"><div class="icon">🌍</div><h3>Mission</h3><p>We are called to reach our generation and make a lasting difference in our world.</p></div>
     </div>
     <div style="text-align:center;margin-top:3rem">
       <a href="register.html" class="btn btn-primary btn-lg">Join Us — Register Now</a>
@@ -82,8 +82,8 @@
 <div class="toast-container" id="toastContainer"></div>
 <script src="shared.js"></script>
 <script>
-  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); loadNavLogo();});
-  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; }).then(()=>{ if(typeof loadFooterInfo==='function') loadFooterInfo(); });
+  fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; loadFooterInfo(); });
 </script>
 </body>
 </html>

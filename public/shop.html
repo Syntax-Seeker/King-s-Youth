@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>King's-Youth | Merch Shop</title>
+  <title>King-Youth | Merch Shop</title>
   <link rel="stylesheet" href="shared.css">
   <style>
     /* Cart overlay */
@@ -46,7 +46,7 @@
   <div style="background:var(--deep);border-bottom:1px solid var(--border);padding:5rem 2rem 3rem;text-align:center">
     <span style="font-family:'Barlow Condensed',sans-serif;font-size:.8rem;letter-spacing:5px;text-transform:uppercase;color:var(--accent);font-weight:600">GREATER Collection</span>
     <h1 style="font-family:'Bebas Neue',cursive;font-size:clamp(3rem,8vw,6rem);letter-spacing:3px;margin:.5rem 0">Official <span style="color:var(--blue-light)">Merch</span></h1>
-    <p style="color:var(--white-dim);max-width:500px;margin:0 auto">Represent the movement. Official King's-Youth merchandise for the GREATER generation.</p>
+    <p style="color:var(--white-dim);max-width:500px;margin:0 auto">Represent the movement. Official King-Youth merchandise for the GREATER generation.</p>
   </div>
 
   <div class="section">
@@ -126,7 +126,7 @@
 <script>
   // ── Init nav and footer ──────────────────────
   fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); }).then(() => { const nb = document.getElementById('navCartBtn'); if (nb) { nb.addEventListener('click', function(e){ e.preventDefault(); openCart(); }); } });
-  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; }).then(()=>{ if(typeof loadFooterInfo==='function') loadFooterInfo(); });
+  fetch('footer.html').then(r=>r.text()).then(h=>{ document.getElementById('footer-root').innerHTML=h; loadFooterInfo(); });
 
   let allProducts = [];
 

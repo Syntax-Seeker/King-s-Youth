@@ -185,6 +185,15 @@ function setActiveNav() {
   });
 }
 
+
+// ── Sessions API ──────────────────────────────
+const Sessions = {
+  getByEvent: (eventId) => api(`/events/${eventId}/sessions`),
+  create: (eventId, data) => api(`/events/${eventId}/sessions`, 'POST', data),
+  update: (id, data) => api(`/sessions/${id}`, 'PUT', data),
+  delete: (id) => api(`/sessions/${id}`, 'DELETE'),
+};
+
 // ── Event card HTML ───────────────────────────
 function eventCardHTML(ev) {
   const spotsLeft = ev.max_participants - (ev.registered || 0);
@@ -207,9 +216,12 @@ function eventCardHTML(ev) {
         <div class="capacity-bar"><div class="capacity-fill" style="width:${pct}%"></div></div>
         <span class="capacity-label">${spotsLeft > 0 ? `${spotsLeft} spots left` : 'FULL'}</span>
       </div>
-      ${ev.status === 'open' && spotsLeft > 0
-        ? `<a href="register.html?event=${ev.id}" class="btn btn-primary btn-sm">Register Now</a>`
-        : `<span class="btn btn-ghost btn-sm" style="cursor:default">${ev.status === 'open' ? 'Event Full' : 'Registration Closed'}</span>`}
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+        <button class="btn btn-outline btn-sm view-details-btn" data-id="${ev.id}">View Details</button>
+        ${ev.status === 'open' && spotsLeft > 0
+          ? `<a href="register.html?event=${ev.id}" class="btn btn-primary btn-sm">Register Now</a>`
+          : `<span class="btn btn-ghost btn-sm" style="cursor:default">${ev.status === 'open' ? 'Event Full' : 'Registration Closed'}</span>`}
+      </div>
     </div>
   </div>`;
 }
@@ -239,6 +251,41 @@ function exportWithAuth(url) {
   const a = document.createElement('a');
   a.href = url + (url.includes('?') ? '&' : '?') + `token=${token}`;
   a.click();
+}
+
+// ── Footer dynamic loader ─────────────────────
+// Call this after injecting footer.html into the DOM
+async function loadFooterInfo() {
+  try {
+    const res = await fetch('https://king-s-youth-production.up.railway.app/api/settings/public');
+    if (!res.ok) return;
+    const d = await res.json();
+
+    // Ministry name
+    const nameEl = document.getElementById('footerMinistryName');
+    if (nameEl && d.ministry_name) nameEl.textContent = d.ministry_name;
+
+    // Copyright line
+    const copy = document.getElementById('footerCopyright');
+    if (copy) copy.textContent = '© ' + new Date().getFullYear() + ' ' + (d.ministry_name || "King's Youth Ministry") + ' · GREATER · All Rights Reserved';
+
+    // Contact info
+    const emailEl = document.getElementById('footerEmail');
+    if (emailEl && d.ministry_email) { emailEl.textContent = d.ministry_email; emailEl.href = 'mailto:' + d.ministry_email; }
+
+    const phoneEl = document.getElementById('footerPhone');
+    if (phoneEl && d.ministry_phone) phoneEl.textContent = d.ministry_phone;
+
+    const addrEl = document.getElementById('footerAddress');
+    if (addrEl && d.ministry_address) addrEl.textContent = d.ministry_address;
+
+    // Logo
+    const logoEl = document.getElementById('footerLogoIcon');
+    if (logoEl && d.site_logo) {
+      logoEl.style.cssText = 'width:44px;height:44px;overflow:hidden;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:transparent;flex-shrink:0;';
+      logoEl.innerHTML = '<img src="' + d.site_logo + '" style="width:100%;height:100%;object-fit:cover">';
+    }
+  } catch(e) { /* fail silently */ }
 }
 
 async function loadNavLogo() {

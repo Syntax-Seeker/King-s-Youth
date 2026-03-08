@@ -13,11 +13,11 @@
   <main class="admin-content">
     <div class="admin-top">
       <h2 class="admin-page-title">Events</h2>
-      <button class="btn btn-primary" onclick="openEventModal()">+ New Event</button>
+      <button class="btn btn-primary" id="newEventBtn">+ New Event</button>
     </div>
     <div class="data-table-wrap">
       <div style="overflow-x:auto">
-        <table><thead><tr><th>Event Name</th><th>Date</th><th>Location</th><th>Status</th><th>Registrations</th><th>Actions</th></tr></thead>
+        <table><thead><tr><th>Event Name</th><th>Date</th><th>Location</th><th>Status</th><th>Sessions</th><th>Actions</th></tr></thead>
         <tbody id="eventsBody"><tr><td colspan="6" style="text-align:center;color:var(--white-dim);padding:2rem">No events yet. Create your first event!</td></tr></tbody></table>
       </div>
     </div>
@@ -28,10 +28,10 @@
 <!-- EVENT MODAL -->
 <div class="modal-overlay" id="eventModal">
   <div class="modal" style="max-width:700px">
-    <button class="modal-close" onclick="closeModal('eventModal')">✕</button>
+    <button class="modal-close" id="eventModalCloseBtn">✕</button>
     <h2 class="modal-title" id="eventModalTitle">Create New Event</h2>
     <p class="modal-sub">Fill out all event details below.</p>
-    <form id="eventForm" onsubmit="saveEvent(event)">
+    <form id="eventForm" id="eventFormEl">
       <input type="hidden" id="editId">
       <div class="form-grid">
         <div class="form-group full"><label class="form-label">Event Name <span class="req">*</span></label><input class="form-input" id="evName" placeholder="Youth Camp 2025" required></div>
@@ -48,16 +48,16 @@
         </div>
         <div class="form-group full">
           <label class="form-label">Event Images / Videos</label>
-          <div class="upload-zone" id="evUploadZone" onclick="document.getElementById('evMediaInput').click()">
+          <div class="upload-zone" id="evUploadZone" id="evUploadZoneTrigger">
             <div class="upload-zone-icon">📁</div>
             <div class="upload-zone-text">Click or drag files here to upload<br><span>Supports JPG, PNG, MP4, MOV</span></div>
-            <input type="file" id="evMediaInput" accept="image/*,video/*" multiple onchange="handleMediaUpload(this)">
+            <input type="file" id="evMediaInput" accept="image/*,video/*" multiple id="evMediaInput">
           </div>
           <div class="upload-previews" id="evPreviews"></div>
         </div>
       </div>
       <div style="margin-top:1.5rem;display:flex;gap:1rem;justify-content:flex-end">
-        <button type="button" class="btn btn-outline" onclick="closeModal('eventModal')">Cancel</button>
+        <button type="button" class="btn btn-outline" id="eventModalCloseBtn">Cancel</button>
         <button type="submit" class="btn btn-primary">Save Event</button>
       </div>
     </form>
@@ -89,19 +89,28 @@
       tbody.innerHTML = allEvents.map(ev=>`
         <tr>
           <td>
-            ${ev.media&&ev.media.length&&ev.media[0].type==='image'?`<img src="${ev.media[0].data}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle">`:''}
+            ${ev.media&&ev.media[0]?`<img src="${ev.media[0]}" style="width:40px;height:40px;border-radius:6px;object-fit:cover;margin-right:8px;vertical-align:middle">`:''}
             <strong>${ev.name}</strong>
           </td>
           <td>${formatDate(ev.date)}</td>
           <td>${ev.location||'—'}</td>
           <td><span class="status-badge status-${ev.status}">${ev.status}</span></td>
-          <td>— / ${ev.max_participants}</td>
+          <td><span class="badge badge-info" id="sessCount_${ev.id}">…</span></td>
           <td style="display:flex;gap:.5rem;flex-wrap:wrap">
-            <button class="action-btn" onclick="openEventModal(${ev.id})">Edit</button>
-            <button class="action-btn del" onclick="deleteEvent(${ev.id})">Delete</button>
+            <button class="action-btn" data-action="edit" data-id="${ev.id}">Edit</button>
+            <button class="action-btn" data-action="sessions" data-id="${ev.id}" style="background:var(--blue);color:#fff">Sessions</button>
+            <button class="action-btn del" data-action="del" data-id="${ev.id}">Delete</button>
           </td>
         </tr>
       `).join('');
+      // Load session counts
+      allEvents.forEach(async ev => {
+        try {
+          const sess = await Sessions.getByEvent(ev.id);
+          const el = document.getElementById('sessCount_'+ev.id);
+          if (el) el.textContent = sess.length + ' session' + (sess.length !== 1 ? 's' : '');
+        } catch(e) {}
+      });
     } catch(e) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:2rem">Failed to load events</td></tr>'; }
   }
 
@@ -184,6 +193,197 @@
   }
 
   renderTable();
+
+  // ── Bind static buttons ──────────────────────
+  document.getElementById('newEventBtn').addEventListener('click', ()=>openEventModal());
+  document.getElementById('eventModalCloseBtn').addEventListener('click', ()=>closeModal('eventModal'));
+  document.getElementById('cancelEventBtn').addEventListener('click', ()=>closeModal('eventModal'));
+  document.getElementById('evUploadZoneTrigger').addEventListener('click', ()=>document.getElementById('evMediaInput').click());
+  document.getElementById('evMediaInput').addEventListener('change', function(){ handleMediaUpload(this); });
+  document.getElementById('eventFormEl').addEventListener('submit', saveEvent);
+
+  // ── Table row delegation ──────────────────────
+  document.getElementById('eventsBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id = parseInt(btn.dataset.id);
+    const action = btn.dataset.action;
+    if (action === 'edit') openEventModal(id);
+    else if (action === 'sessions') openSessionsModal(id);
+    else if (action === 'del') deleteEvent(id);
+  });
+
+  // ── Sessions management ───────────────────────
+  let currentSessionEventId = null;
+  let allSessions = [];
+
+  async function openSessionsModal(eventId) {
+    currentSessionEventId = eventId;
+    const ev = allEvents.find(e=>e.id===eventId);
+    document.getElementById('sessModalTitle').textContent = 'Sessions: ' + (ev ? ev.name : '');
+    document.getElementById('sessionsListWrap').innerHTML = '<div style="text-align:center;color:var(--white-dim);padding:2rem">Loading…</div>';
+    openModal('sessionsModal');
+    await refreshSessionsList();
+  }
+
+  async function refreshSessionsList() {
+    const wrap = document.getElementById('sessionsListWrap');
+    try {
+      allSessions = await Sessions.getByEvent(currentSessionEventId);
+      if (!allSessions.length) {
+        wrap.innerHTML = '<div style="text-align:center;color:var(--white-dim);padding:2rem">No sessions yet. Click "+ Add Session" to create one.</div>';
+        // Update count badge
+        const el = document.getElementById('sessCount_'+currentSessionEventId);
+        if (el) el.textContent = '0 sessions';
+        return;
+      }
+      wrap.innerHTML = allSessions.map(s => `
+        <div style="background:var(--deep);border:1px solid var(--border);border-radius:10px;padding:.875rem 1rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem">
+          <div style="flex:1">
+            <div style="font-weight:600">${s.name}</div>
+            ${s.description ? `<div style="font-size:.82rem;color:var(--white-dim);margin-top:2px">${s.description}</div>` : ''}
+            <div style="font-size:.8rem;color:var(--white-dim);margin-top:3px">
+              ${s.date ? formatDate(String(s.date).substring(0,10)) : ''}${s.time ? ' · '+s.time : ''}
+              ${s.max_participants ? ' · Max: '+s.max_participants : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:.4rem;flex-shrink:0">
+            <button class="action-btn" data-sess-action="edit" data-sess-id="${s.id}">Edit</button>
+            <button class="action-btn del" data-sess-action="del" data-sess-id="${s.id}">Del</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Bind session row buttons
+      wrap.querySelectorAll('[data-sess-action]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const sid = parseInt(this.dataset.sessId);
+          if (this.dataset.sessAction === 'edit') openSessForm(sid);
+          else if (this.dataset.sessAction === 'del') deleteSess(sid);
+        });
+      });
+
+      // Update count badge
+      const el = document.getElementById('sessCount_'+currentSessionEventId);
+      if (el) el.textContent = allSessions.length + ' session' + (allSessions.length !== 1 ? 's' : '');
+    } catch(e) { wrap.innerHTML = '<div style="color:var(--danger);padding:2rem;text-align:center">Failed to load sessions</div>'; }
+  }
+
+  function openSessForm(sessId=null) {
+    document.getElementById('sessEditId').value = sessId || '';
+    document.getElementById('sessFormTitle').textContent = sessId ? 'Edit Session' : 'Add Session';
+    if (sessId) {
+      const s = allSessions.find(x=>x.id===sessId);
+      if (s) {
+        document.getElementById('sessName').value  = s.name;
+        document.getElementById('sessDesc').value  = s.description||'';
+        document.getElementById('sessDate').value  = s.date ? String(s.date).substring(0,10) : '';
+        document.getElementById('sessTime').value  = s.time||'';
+        document.getElementById('sessMax').value   = s.max_participants||'';
+        document.getElementById('sessOrder').value = s.session_order||1;
+      }
+    } else {
+      document.getElementById('sessName').value  = '';
+      document.getElementById('sessDesc').value  = '';
+      document.getElementById('sessDate').value  = '';
+      document.getElementById('sessTime').value  = '';
+      document.getElementById('sessMax').value   = '';
+      document.getElementById('sessOrder').value = (allSessions.length + 1);
+    }
+    openModal('sessFormModal');
+  }
+
+  async function saveSess() {
+    const sessId = document.getElementById('sessEditId').value;
+    const name = document.getElementById('sessName').value.trim();
+    if (!name) { toast('Session name is required', 'error'); return; }
+    const payload = {
+      name,
+      description:     document.getElementById('sessDesc').value,
+      date:            document.getElementById('sessDate').value || null,
+      time:            document.getElementById('sessTime').value || null,
+      max_participants: document.getElementById('sessMax').value || null,
+      session_order:   document.getElementById('sessOrder').value || 0,
+    };
+    try {
+      if (sessId) await Sessions.update(sessId, payload);
+      else await Sessions.create(currentSessionEventId, payload);
+      closeModal('sessFormModal');
+      toast('Session saved! ✅', 'success');
+      await refreshSessionsList();
+    } catch(err) { toast('Save failed: '+err.message, 'error'); }
+  }
+
+  async function deleteSess(sessId) {
+    if (!confirm('Delete this session?')) return;
+    try {
+      await Sessions.delete(sessId);
+      toast('Session deleted.', 'info');
+      await refreshSessionsList();
+    } catch(err) { toast('Delete failed: '+err.message, 'error'); }
+  }
+
+  // Sessions modal buttons
+  document.getElementById('sessModalCloseBtn').addEventListener('click', ()=>closeModal('sessionsModal'));
+  document.getElementById('addSessionBtn').addEventListener('click', ()=>openSessForm());
+  document.getElementById('sessFormCloseBtn').addEventListener('click', ()=>closeModal('sessFormModal'));
+  document.getElementById('sessFormCancelBtn').addEventListener('click', ()=>closeModal('sessFormModal'));
+  document.getElementById('sessFormSaveBtn').addEventListener('click', saveSess);
 </script>
+
+<!-- SESSIONS MODAL -->
+<div class="modal-overlay" id="sessionsModal">
+  <div class="modal" style="max-width:680px">
+    <button class="modal-close" id="sessModalCloseBtn">✕</button>
+    <h2 class="modal-title" id="sessModalTitle">Manage Sessions</h2>
+    <p class="modal-sub" id="sessModalSub">Create divided sessions for this event. Participants will choose a session when registering.</p>
+    <div style="margin-bottom:1.25rem;display:flex;justify-content:flex-end">
+      <button class="btn btn-primary btn-sm" id="addSessionBtn">+ Add Session</button>
+    </div>
+    <div id="sessionsListWrap">
+      <div style="text-align:center;color:var(--white-dim);padding:2rem">Loading sessions…</div>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION FORM MODAL -->
+<div class="modal-overlay" id="sessFormModal">
+  <div class="modal" style="max-width:500px">
+    <button class="modal-close" id="sessFormCloseBtn">✕</button>
+    <h2 class="modal-title" id="sessFormTitle">Add Session</h2>
+    <div class="form-group">
+      <label class="form-label">Session Name <span class="req">*</span></label>
+      <input class="form-input" id="sessName" placeholder="e.g. Morning Session, Group A">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="sessDesc" rows="2" placeholder="Brief description of this session..."></textarea>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Session Date</label>
+        <input class="form-input" type="date" id="sessDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Session Time</label>
+        <input class="form-input" type="time" id="sessTime">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max Slots</label>
+        <input class="form-input" type="number" id="sessMax" placeholder="Leave blank for unlimited">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Order</label>
+        <input class="form-input" type="number" id="sessOrder" placeholder="1, 2, 3…" value="1">
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-outline" id="sessFormCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="sessFormSaveBtn">Save Session</button>
+    </div>
+    <input type="hidden" id="sessEditId">
+  </div>
+</div>
+
 </body>
 </html>
