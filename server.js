@@ -36,6 +36,13 @@ const db = mysql.createPool({
   enableKeepAlive: true
 });
 
+// Increase packet size for base64 image storage
+db.getConnection().then(conn => {
+  conn.query("SET GLOBAL max_allowed_packet=67108864").catch(()=>{});
+  conn.query("SET SESSION max_allowed_packet=67108864").catch(()=>{});
+  conn.release();
+}).catch(()=>{});
+
 
 // ── Auth Middleware ────────────────────────────
 function authRequired(req, res, next) {

@@ -139,9 +139,31 @@
   });
   document.getElementById('evMediaInput').addEventListener('change', function(){ handleMediaUpload(this.files); });
 
+  // Resize + compress image to max 800px wide, quality 0.7 before storing
+  function compressImage(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const MAX = 800;
+          let w = img.width, h = img.height;
+          if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.7));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function handleMediaUpload(files) {
     for (const file of Array.from(files)) {
-      const data = await readFileAsBase64(file);
+      if (!file.type.startsWith('image/')) continue;
+      const data = await compressImage(file);
       tempMedia.push(data);
       const img = document.createElement('img');
       img.src = data; img.className = 'upload-thumb';
