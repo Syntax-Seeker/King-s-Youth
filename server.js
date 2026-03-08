@@ -160,9 +160,10 @@ app.get('/api/events/:id/registration-count', async (req, res) => {
 app.get('/api/registrations', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
-    let sql = `SELECT r.*, e.name as event_name, s.name as session_name FROM registrations r
-               LEFT JOIN events e ON r.event_id = e.id
-               LEFT JOIN event_sessions s ON r.session_id = s.id`;
+    let sql = `SELECT r.*, e.name as event_name,
+               (SELECT s.name FROM event_sessions s WHERE s.id = r.session_id LIMIT 1) as session_name
+               FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id`;
     const params = [];
     if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
     sql += ' ORDER BY r.registered_at DESC';
@@ -210,9 +211,10 @@ app.delete('/api/registrations/:id', authRequired, async (req, res) => {
 app.get('/api/registrations/export', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
-    let sql = `SELECT r.*, e.name as event_name, s.name as session_name FROM registrations r
-               LEFT JOIN events e ON r.event_id = e.id
-               LEFT JOIN event_sessions s ON r.session_id = s.id`;
+    let sql = `SELECT r.*, e.name as event_name,
+               (SELECT s.name FROM event_sessions s WHERE s.id = r.session_id LIMIT 1) as session_name
+               FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id`;
     const params = [];
     if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
     const [rows] = await db.query(sql, params);
@@ -233,9 +235,10 @@ app.get('/api/registrations/export', authRequired, async (req, res) => {
 app.get('/api/registrations/export-json', authRequired, async (req, res) => {
   try {
     const { event_id } = req.query;
-    let sql = `SELECT r.*, e.name as event_name, s.name as session_name FROM registrations r
-               LEFT JOIN events e ON r.event_id = e.id
-               LEFT JOIN event_sessions s ON r.session_id = s.id`;
+    let sql = `SELECT r.*, e.name as event_name,
+               (SELECT s.name FROM event_sessions s WHERE s.id = r.session_id LIMIT 1) as session_name
+               FROM registrations r
+               LEFT JOIN events e ON r.event_id = e.id`;
     const params = [];
     if (event_id) { sql += ' WHERE r.event_id=?'; params.push(event_id); }
     sql += ' ORDER BY r.registered_at DESC';

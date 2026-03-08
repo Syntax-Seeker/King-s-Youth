@@ -136,7 +136,7 @@
         (ev.media||[]).forEach(m=>{ if(m.type==='image'){ const img=document.createElement('img'); img.src=m.data; img.className='upload-thumb'; document.getElementById('evPreviews').appendChild(img); } });
       }
     } else {
-      document.getElementById('eventForm').reset();
+      document.getElementById('eventFormEl').reset();
     }
     openModal('eventModal');
   }
