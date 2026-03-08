@@ -77,7 +77,8 @@ const Registrations = {
   getSlim: () => api('/registrations/slim'),
   create: (data) => api('/registrations', { method: 'POST', body: JSON.stringify(data) }),
   delete: (id) => api(`/registrations/${id}`, { method: 'DELETE' }),
-  exportURL: (event_id) => `${API_BASE}/registrations/export${event_id ? `?event_id=${event_id}` : ''}`
+  exportURL: (event_id) => `${API_BASE}/registrations/export${event_id ? `?event_id=${event_id}` : ''}`,
+  exportJson: (event_id) => api('/registrations/export-json' + (event_id ? `?event_id=${event_id}` : ''))
 };
 
 // ── Products API ──────────────────────────────

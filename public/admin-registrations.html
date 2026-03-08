@@ -230,10 +230,7 @@
     try {
       toast('Preparing Excel… ⏳', 'info');
       const filterEv = document.getElementById('filterEventSel').value || '';
-      const url = Registrations.exportJsonURL(filterEv);
-      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('ky_token') } });
-      if (!res.ok) throw new Error('Export request failed');
-      const rows = await res.json();
+      const rows = await Registrations.exportJson(filterEv);
 
       const headers = [
         '#', 'Event', 'Session(s)', 'First Name', 'Last Name', 'Age', 'Gender',
