@@ -15,7 +15,7 @@
     <div class="admin-top">
       <h2 class="admin-page-title">Registrations</h2>
       <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
-        <select class="form-select" id="filterEvent" style="width:200px" id="filterEventSel">
+        <select class="form-select" id="filterEventSel" style="width:200px">
           <option value="">All Events</option>
         </select>
         <button class="export-btn" id="exportBtn">📊 Export to Excel (.xlsx)</button>
@@ -45,7 +45,7 @@
 <!-- VIEW PARTICIPANT MODAL -->
 <div class="modal-overlay" id="viewModal">
   <div class="modal" style="max-width:600px">
-    <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+    <button class="modal-close" id="viewModalCloseBtn">✕</button>
     <h2 class="modal-title" id="viewName">Participant</h2>
     <div id="viewContent"></div>
   </div>
@@ -65,7 +65,7 @@
 
   async function init() {
     // Populate event filter
-    const filterSel = document.getElementById('filterEvent');
+    const filterSel = document.getElementById('filterEventSel');
     try {
       const events = await Events.getAll();
       events.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=e.name; filterSel.appendChild(o); });
@@ -209,6 +209,7 @@
   init();
 
   // Bind static controls
+  document.getElementById('viewModalCloseBtn').addEventListener('click', ()=>closeModal('viewModal'));
   document.getElementById('filterEventSel').addEventListener('change', render);
   document.getElementById('searchInput').addEventListener('input', render);
   document.getElementById('exportBtn').addEventListener('click', exportExcel);
