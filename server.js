@@ -118,11 +118,11 @@ app.get('/api/events/slim', async (req, res) => {
 app.get('/api/registrations/slim', authRequired, async (req, res) => {
   try {
     const [rows] = await db.query(
-      \`SELECT r.id, r.first_name, r.last_name, r.church_name, r.registered_at, r.event_id,
+      `SELECT r.id, r.first_name, r.last_name, r.church_name, r.registered_at, r.event_id,
        e.name as event_name
        FROM registrations r
        LEFT JOIN events e ON r.event_id = e.id
-       ORDER BY r.registered_at DESC LIMIT 50\`
+       ORDER BY r.registered_at DESC LIMIT 50`
     );
     res.json(rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
