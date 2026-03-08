@@ -119,8 +119,9 @@
     const pct = Math.min(100, Math.round(((ev.registered||0)/ev.max_participants)*100));
 
     // Hero
-    document.getElementById('evModalHero').innerHTML = ev.media?.[0]
-      ? `<img src="${ev.media[0]}" alt="${ev.name}">`
+    const heroImg = Array.isArray(ev.media) ? ev.media[0] : (typeof ev.media==='string'&&ev.media.startsWith('data:') ? ev.media : null);
+    document.getElementById('evModalHero').innerHTML = heroImg
+      ? `<img src="${heroImg}" alt="${ev.name}">`
       : '<div class="ev-modal-hero-placeholder">📅</div>';
 
     document.getElementById('evModalBadges').innerHTML =

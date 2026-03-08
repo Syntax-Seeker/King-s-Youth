@@ -203,7 +203,7 @@ function eventCardHTML(ev) {
   const statusClass = { open: 'success', upcoming: 'info', closed: 'danger' }[ev.status] || 'info';
   return `
   <div class="event-card">
-    ${ev.media?.[0] ? `<div class="event-img" style="background-image:url('${ev.media[0]}')"></div>` : '<div class="event-img event-img-placeholder"><span>📅</span></div>'}
+    ${(()=>{ const m = Array.isArray(ev.media) ? ev.media[0] : (typeof ev.media==='string'&&ev.media.startsWith('data:') ? ev.media : null); return m ? `<div class="event-img" style="background-image:url('${m}')"></div>` : '<div class="event-img event-img-placeholder"><span>📅</span></div>'; })()}
     <div class="event-body">
       <div class="event-meta">
         <span class="badge badge-${statusClass}">${ev.status}</span>
