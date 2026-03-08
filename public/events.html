@@ -6,10 +6,65 @@
   <title>King-Youth | Events</title>
   <link rel="stylesheet" href="shared.css">
   <style>
-    .events-hero { background: var(--deep); border-bottom: 1px solid var(--border); padding: 5rem 2rem 3rem; text-align: center; }
+    .events-hero {
+      background: linear-gradient(180deg, var(--black) 0%, var(--deep) 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 6rem 2rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .events-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,180,255,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
     .filter-bar { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-bottom: 3rem; }
-    .filter-btn { padding: .4rem 1.25rem; border: 1px solid var(--border); background: none; color: var(--white-dim); border-radius: 20px; cursor: pointer; font-family: 'Barlow Condensed',sans-serif; font-weight: 600; font-size: .85rem; letter-spacing: 1px; transition: all .2s; }
-    .filter-btn:hover, .filter-btn.active { border-color: var(--blue); color: var(--blue-light); background: var(--blue-glow); }
+    .filter-btn { padding: .5rem 1.5rem; border: 1px solid var(--border); background: rgba(255,255,255,.03); color: var(--white-dim); border-radius: 999px; cursor: pointer; font-family: 'Barlow Condensed',sans-serif; font-weight: 600; font-size: .9rem; letter-spacing: 2px; text-transform: uppercase; transition: all .2s; }
+    .filter-btn:hover, .filter-btn.active { border-color: var(--blue); color: #fff; background: var(--blue-glow); box-shadow: 0 0 16px rgba(0,180,255,.2); }
+
+    /* ── Redesigned event cards ── */
+    .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .event-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform .25s, box-shadow .25s, border-color .25s;
+      cursor: pointer;
+    }
+    .event-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 0 0 1px var(--blue); border-color: var(--blue); }
+    .event-img { height: 200px; background: linear-gradient(135deg, var(--deep), #0a0e1a); background-size: cover; background-position: center; position: relative; flex-shrink: 0; }
+    .event-img-placeholder { display: flex; align-items: center; justify-content: center; font-size: 3.5rem; opacity: .4; }
+    .event-img::after { content:''; position:absolute; inset:0; background:linear-gradient(to bottom, transparent 40%, rgba(0,0,0,.7)); }
+    .event-img .event-date-badge {
+      position: absolute;
+      bottom: .75rem;
+      left: .75rem;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      padding: .3rem .7rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #fff;
+      z-index: 1;
+    }
+    .event-body { padding: 1.25rem 1.5rem 1.5rem; display: flex; flex-direction: column; flex: 1; }
+    .event-meta { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .75rem; }
+    .event-title { font-family: 'Bebas Neue', cursive; font-size: 1.6rem; letter-spacing: 2px; line-height: 1.1; margin-bottom: .6rem; color: #fff; }
+    .event-detail { font-size: .85rem; color: var(--white-dim); margin-bottom: .3rem; }
+    .event-detail:last-of-type { margin-bottom: 0; }
+    .event-spots-bar { margin: 1rem 0 .5rem; }
+    .event-card-footer { display: flex; gap: .6rem; margin-top: auto; padding-top: 1.1rem; border-top: 1px solid var(--border); }
+    .event-card-footer .btn { flex: 1; padding: .55rem; font-size: .82rem; text-align: center; }
     .ev-modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:2000; align-items:center; justify-content:center; padding:1rem; }
     .ev-modal-overlay.open { display:flex; }
     .ev-modal-box { background:var(--card); border:1px solid var(--border); border-radius:20px; width:100%; max-width:680px; max-height:90vh; overflow-y:auto; position:relative; }

@@ -196,38 +196,47 @@ const Sessions = {
   delete: (id) => api(`/sessions/${id}`, { method:'DELETE' }),
 };
 
-// ── Event card HTML ───────────────────────────
+// \u2500\u2500 Event card HTML \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function eventCardHTML(ev) {
-  const spotsLeft = ev.max_participants - (ev.registered || 0);
-  const pct = Math.round(((ev.registered || 0) / ev.max_participants) * 100);
+  const maxP = parseInt(ev.max_participants) || 0;
+  const reg  = parseInt(ev.registered) || 0;
+  const spotsLeft = maxP > 0 ? maxP - reg : null;
+  const pct = maxP > 0 ? Math.min(100, Math.round(reg / maxP * 100)) : 0;
   const statusClass = { open: 'success', upcoming: 'info', closed: 'danger' }[ev.status] || 'info';
+  const m = Array.isArray(ev.media) ? ev.media[0] : (typeof ev.media === 'string' && ev.media.startsWith('data:') ? ev.media : null);
+  const dateStr = ev.date ? String(ev.date).substring(0,10) : '';
+  const endStr  = ev.end_date ? String(ev.end_date).substring(0,10) : '';
+  const dateLabel = dateStr ? (endStr && endStr !== dateStr ? formatDate(dateStr) + ' \u2013 ' + formatDate(endStr) : formatDate(dateStr)) : '';
+  const isFull = spotsLeft !== null && spotsLeft <= 0;
+  const canReg = ev.status === 'open' && !isFull;
   return `
   <div class="event-card">
-    ${(()=>{ const m = Array.isArray(ev.media) ? ev.media[0] : (typeof ev.media==='string'&&ev.media.startsWith('data:') ? ev.media : null); return m ? `<div class="event-img" style="background-image:url('${m}')"></div>` : '<div class="event-img event-img-placeholder"><span>📅</span></div>'; })()}
+    <div class="event-img${m ? '' : ' event-img-placeholder'}" ${m ? `style="background-image:url('${m}')"` : ''}>
+      ${m ? '' : '<span>\u{1F4C5}</span>'}
+      ${dateLabel ? `<div class="event-date-badge">\u{1F4C5} ${dateLabel}</div>` : ''}
+    </div>
     <div class="event-body">
       <div class="event-meta">
         <span class="badge badge-${statusClass}">${ev.status}</span>
-        ${ev.fee > 0 ? `<span class="badge badge-gold">₱${Number(ev.fee).toLocaleString()}</span>` : '<span class="badge badge-success">FREE</span>'}
+        ${Number(ev.fee) > 0 ? `<span class="badge badge-gold">\u20B1${Number(ev.fee).toLocaleString()}</span>` : '<span class="badge badge-success">FREE</span>'}
       </div>
       <h3 class="event-title">${ev.name}</h3>
-      <p class="event-detail">📅 ${formatDate(ev.date ? String(ev.date).substring(0,10) : ev.date)}${ev.end_date ? ' – ' + formatDate(ev.end_date ? String(ev.end_date).substring(0,10) : ev.end_date) : ''}</p>
-      ${ev.time ? `<p class="event-detail">🕐 ${ev.time}</p>` : ''}
-      ${ev.location ? `<p class="event-detail">📍 ${ev.location}</p>` : ''}
-      ${ev.description ? `<p class="event-desc">${ev.description}</p>` : ''}
-      <div class="capacity-bar-wrap">
+      ${ev.time ? `<p class="event-detail">\u{1F550} ${ev.time}</p>` : ''}
+      ${ev.location ? `<p class="event-detail">\u{1F4CD} ${ev.location}</p>` : ''}
+      ${spotsLeft !== null ? `
+      <div class="event-spots-bar">
         <div class="capacity-bar"><div class="capacity-fill" style="width:${pct}%"></div></div>
-        <span class="capacity-label">${spotsLeft > 0 ? `${spotsLeft} spots left` : 'FULL'}</span>
-      </div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem">
+        <span class="capacity-label" style="font-size:.78rem;color:var(--white-dim)">${isFull ? '\u26D4 FULL' : `${spotsLeft} spots left`}</span>
+      </div>` : ''}
+      <div class="event-card-footer">
         <button class="btn btn-outline btn-sm view-details-btn" data-id="${ev.id}">View Details</button>
-        ${ev.status === 'open' && spotsLeft > 0
-          ? `<a href="register.html?event=${ev.id}" class="btn btn-primary btn-sm">Register Now</a>`
-          : `<span class="btn btn-ghost btn-sm" style="cursor:default">${ev.status === 'open' ? 'Event Full' : 'Registration Closed'}</span>`}
+        ${canReg
+          ? `<a href="register.html?event=${ev.id}" class="btn btn-primary btn-sm">Register</a>`
+          : `<span class="btn btn-sm" style="cursor:default;opacity:.5;border:1px solid var(--border)">${isFull ? 'Full' : 'Closed'}</span>`}
       </div>
     </div>
   </div>`;
 }
-
 function formatDate(d) {
   if (!d) return '';
   const s = typeof d === 'string' ? d.substring(0, 10) : String(d);

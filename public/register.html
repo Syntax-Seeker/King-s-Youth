@@ -60,8 +60,9 @@
           </div>
           <div class="form-group full" id="sessionPickerWrap" style="display:none">
             <label class="form-label">Select Session <span class="req">*</span></label>
-            <select class="form-select" id="rSession"><option value="">— No preference / No sessions —</option></select>
-            <p style="font-size:.8rem;color:var(--white-dim);margin-top:.35rem">This event has divided sessions. Please choose your preferred session.</p>
+            <p style="font-size:.8rem;color:var(--white-dim);margin-top:-.25rem;margin-bottom:.75rem">This event has multiple sessions. Please choose one session per day.</p>
+            <div id="sessionDaysWrap"></div>
+            <input type="hidden" id="rSession">
           </div>
         </div>
 
@@ -146,23 +147,86 @@
 
   async function loadSessions(eventId) {
     const wrap = document.getElementById('sessionPickerWrap');
-    const sel = document.getElementById('rSession');
-    sel.innerHTML = '<option value="">— No preference —</option>';
+    const daysWrap = document.getElementById('sessionDaysWrap');
+    const hiddenInput = document.getElementById('rSession');
+    hiddenInput.value = '';
+    daysWrap.innerHTML = '';
     wrap.style.display = 'none';
     if (!eventId) return;
     try {
       const sessions = await Sessions.getByEvent(eventId);
-      if (sessions && sessions.length) {
-        sessions.forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.id;
-          const info = [s.date ? formatDate(String(s.date).substring(0,10)) : '', s.time||''].filter(Boolean).join(' · ');
-          opt.textContent = s.name + (info ? ' (' + info + ')' : '') + (s.max_participants ? ' — ' + s.max_participants + ' slots' : '');
-          sel.appendChild(opt);
+      if (!sessions || !sessions.length) return;
+
+      // Group sessions by date
+      const groups = {};
+      sessions.forEach(function(s) {
+        const key = s.date ? String(s.date).substring(0,10) : 'general';
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(s);
+      });
+
+      const days = Object.keys(groups).sort();
+      days.forEach(function(day, di) {
+        const dayLabel = day === 'general' ? 'Sessions' : formatDate(day);
+        const groupName = 'sess_day_' + di;
+        const dayDiv = document.createElement('div');
+        dayDiv.style.cssText = 'margin-bottom:1rem;background:var(--deep);border:1px solid var(--border);border-radius:12px;padding:1rem';
+
+        const heading = document.createElement('div');
+        heading.style.cssText = "font-family:'Barlow Condensed',sans-serif;font-size:.75rem;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:.6rem";
+        heading.textContent = dayLabel;
+        dayDiv.appendChild(heading);
+
+        groups[day].forEach(function(s) {
+          const info = [s.time||'', s.max_participants ? s.max_participants+' slots' : ''].filter(Boolean).join(' · ');
+          const radioId = 'sess_radio_' + s.id;
+
+          const row = document.createElement('label');
+          row.setAttribute('for', radioId);
+          row.style.cssText = 'display:flex;align-items:flex-start;gap:.75rem;padding:.5rem .6rem;border-radius:8px;cursor:pointer;transition:background .15s';
+
+          const radio = document.createElement('input');
+          radio.type = 'radio';
+          radio.id = radioId;
+          radio.name = groupName;
+          radio.value = s.id;
+          radio.style.cssText = 'accent-color:var(--blue);width:16px;height:16px;flex-shrink:0;margin-top:3px';
+          radio.addEventListener('change', function() {
+            const selected = Array.from(document.querySelectorAll('#sessionDaysWrap input[type=radio]:checked'))
+              .map(function(r){ return r.value; }).filter(Boolean);
+            hiddenInput.value = selected.join(',');
+          });
+
+          const info_wrap = document.createElement('span');
+          const nameEl = document.createElement('span');
+          nameEl.style.cssText = 'font-weight:600;display:block';
+          nameEl.textContent = s.name;
+          info_wrap.appendChild(nameEl);
+          if (info) {
+            const infoEl = document.createElement('span');
+            infoEl.style.cssText = 'font-size:.78rem;color:var(--white-dim)';
+            infoEl.textContent = info;
+            info_wrap.appendChild(infoEl);
+          }
+          if (s.description) {
+            const descEl = document.createElement('span');
+            descEl.style.cssText = 'font-size:.78rem;color:var(--white-dim);display:block';
+            descEl.textContent = s.description;
+            info_wrap.appendChild(descEl);
+          }
+
+          row.addEventListener('mouseenter', function(){ row.style.background='rgba(0,180,255,.06)'; });
+          row.addEventListener('mouseleave', function(){ row.style.background=''; });
+
+          row.appendChild(radio);
+          row.appendChild(info_wrap);
+          dayDiv.appendChild(row);
         });
-        wrap.style.display = 'block';
-      }
-    } catch(e) {}
+        daysWrap.appendChild(dayDiv);
+      });
+
+      wrap.style.display = 'block';
+    } catch(e) { console.warn('Sessions load error', e); }
   }
 
   async function submitReg(e) {
