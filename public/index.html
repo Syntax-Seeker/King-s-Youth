@@ -118,6 +118,30 @@
   <div id="footer-root"></div>
 </div>
 <div class="toast-container" id="toastContainer"></div>
+<!-- EVENT DETAIL MODAL -->
+<div class="ev-modal-overlay" id="evDetailModal">
+  <div class="ev-modal-box">
+    <button class="ev-modal-close" id="evModalCloseBtn">✕</button>
+    <div class="ev-modal-hero" id="evModalHero"><div class="ev-modal-hero-placeholder">📅</div></div>
+    <div class="ev-modal-body">
+      <div class="ev-modal-badges" id="evModalBadges"></div>
+      <div class="ev-modal-title" id="evModalTitle"></div>
+      <div class="ev-modal-details" id="evModalDetails"></div>
+      <div class="cap-bar-wrap" id="evModalCapacity"></div>
+      <div id="evModalDescWrap" style="display:none">
+        <div class="ev-modal-desc-label">About This Event</div>
+        <div class="ev-modal-desc" id="evModalDesc"></div>
+      </div>
+      <div id="evModalSessionsWrap" style="display:none">
+        <div class="ev-modal-desc-label" style="margin-bottom:.75rem">Divided Sessions</div>
+        <div id="evModalSessions"></div>
+      </div>
+      <div class="ev-modal-footer" id="evModalFooter"></div>
+    </div>
+  </div>
+</div>
+</body>
+
 <script src="shared.js"></script>
 <script>
   fetch('nav.html').then(r=>r.text()).then(h=>{ document.getElementById('nav-root').innerHTML=h; setActiveNav(); updateCartBadge(); loadNavLogo(); });
@@ -235,27 +259,4 @@
 
   loadHome();
 </script>
-<!-- EVENT DETAIL MODAL -->
-<div class="ev-modal-overlay" id="evDetailModal">
-  <div class="ev-modal-box">
-    <button class="ev-modal-close" id="evModalCloseBtn">✕</button>
-    <div class="ev-modal-hero" id="evModalHero"><div class="ev-modal-hero-placeholder">📅</div></div>
-    <div class="ev-modal-body">
-      <div class="ev-modal-badges" id="evModalBadges"></div>
-      <div class="ev-modal-title" id="evModalTitle"></div>
-      <div class="ev-modal-details" id="evModalDetails"></div>
-      <div class="cap-bar-wrap" id="evModalCapacity"></div>
-      <div id="evModalDescWrap" style="display:none">
-        <div class="ev-modal-desc-label">About This Event</div>
-        <div class="ev-modal-desc" id="evModalDesc"></div>
-      </div>
-      <div id="evModalSessionsWrap" style="display:none">
-        <div class="ev-modal-desc-label" style="margin-bottom:.75rem">Divided Sessions</div>
-        <div id="evModalSessions"></div>
-      </div>
-      <div class="ev-modal-footer" id="evModalFooter"></div>
-    </div>
-  </div>
-</div>
-</body>
 </html>
