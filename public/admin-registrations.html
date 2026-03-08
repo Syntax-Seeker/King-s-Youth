@@ -15,10 +15,10 @@
     <div class="admin-top">
       <h2 class="admin-page-title">Registrations</h2>
       <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
-        <select class="form-select" id="filterEventSel" style="width:200px">
+        <select class="form-select" id="filterEventSel" style="width:220px">
           <option value="">All Events</option>
         </select>
-        <button class="export-btn" id="exportBtn">📊 Export to Excel (.xlsx)</button>
+        <button class="export-btn" id="exportBtn">📊 Export to Excel</button>
       </div>
     </div>
 
@@ -30,11 +30,22 @@
       <div style="overflow-x:auto">
         <table>
           <thead><tr>
-            <th>#</th><th>Full Name</th><th>Age</th><th>Gender</th>
-            <th>Contact</th><th>Email</th><th>Address</th><th>Church</th><th>Cell Group</th><th>Church Duration</th>
-            <th>Event</th><th>Session</th><th>Emergency Contact</th><th>Medical</th><th>Reg. Date</th><th>Actions</th>
+            <th>#</th>
+            <th>Full Name</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Contact</th>
+            <th>Email</th>
+            <th>Church</th>
+            <th>Cell Group</th>
+            <th>Event</th>
+            <th>Session(s)</th>
+            <th>Reg. Date</th>
+            <th>Actions</th>
           </tr></thead>
-          <tbody id="regBody"><tr><td colspan="15" style="text-align:center;color:var(--white-dim);padding:2rem">No registrations yet</td></tr></tbody>
+          <tbody id="regBody">
+            <tr><td colspan="12" style="text-align:center;color:var(--white-dim);padding:2rem">Loading…</td></tr>
+          </tbody>
         </table>
       </div>
     </div>
@@ -42,9 +53,9 @@
 </div>
 </div>
 
-<!-- VIEW PARTICIPANT MODAL -->
+<!-- VIEW MODAL -->
 <div class="modal-overlay" id="viewModal">
-  <div class="modal" style="max-width:600px">
+  <div class="modal" style="max-width:640px">
     <button class="modal-close" id="viewModalCloseBtn">✕</button>
     <h2 class="modal-title" id="viewName">Participant</h2>
     <div id="viewContent"></div>
@@ -57,40 +68,55 @@
   requireAdmin();
   fetch('admin-nav.html').then(r=>r.text()).then(h=>{
     document.getElementById('admin-nav-root').innerHTML=h;
-    document.querySelectorAll('.admin-nav-item[data-page]').forEach(a=>{ a.classList.toggle('active', a.dataset.page==='admin-registrations.html'); });
+    document.querySelectorAll('.admin-nav-item[data-page]').forEach(a=>{
+      a.classList.toggle('active', a.dataset.page==='admin-registrations.html');
+    });
   });
   initModalOverlayClose();
 
   let allRegs = [];
 
-  async function init() {
-    // Populate event filter
-    const filterSel = document.getElementById('filterEventSel');
-    try {
-      const events = await Events.getAll();
-      events.forEach(e=>{ const o=document.createElement('option'); o.value=e.id; o.textContent=e.name; filterSel.appendChild(o); });
-    } catch(e) {}
-    await render();
+  // ── Session name helper ───────────────────────
+  // session_id stored as comma-separated "1,2,3" — look up names from cache
+  let sessionCache = {}; // { sessionId: name }
+
+  async function resolveSessionNames(regs) {
+    // Collect all unique session IDs from all regs
+    const ids = new Set();
+    regs.forEach(r => {
+      if (r.session_id) {
+        String(r.session_id).split(',').forEach(id => { if (id.trim()) ids.add(id.trim()); });
+      }
+    });
+    // Fetch names for any IDs not yet cached
+    for (const id of ids) {
+      if (!sessionCache[id]) {
+        try {
+          const s = await api('/sessions/' + id);
+          sessionCache[id] = s.name || ('Session ' + id);
+        } catch(e) { sessionCache[id] = 'Session ' + id; }
+      }
+    }
   }
 
-  function getFiltered() {
-    const filterEv=document.getElementById('filterEventSel').value;
-    const search=(document.getElementById('searchInput').value||'').toLowerCase();
-    let data=allRegs;
-    if (filterEv) data=data.filter(r=>r.event_id==filterEv);
-    if (search)  data=data.filter(r=>`${r.first_name} ${r.last_name} ${r.church_name} ${r.event_name} ${r.email} ${r.phone}`.toLowerCase().includes(search));
-    return data;
+  function getSessionLabel(session_id, session_name) {
+    // If server already joined session_name, use it
+    if (session_name) return session_name;
+    if (!session_id) return null;
+    // Otherwise resolve from cache
+    const ids = String(session_id).split(',').map(s=>s.trim()).filter(Boolean);
+    const names = ids.map(id => sessionCache[id] || ('Session ' + id));
+    return names.join(', ');
   }
 
-  async function render() {
-    const tbody=document.getElementById('regBody');
-    tbody.innerHTML='<tr><td colspan="15" style="text-align:center;color:var(--white-dim);padding:2rem">Loading…</td></tr>';
-    try {
-      allRegs = await Registrations.getAll();
-      const data=getFiltered();
-      document.getElementById('countLabel').textContent=data.length+' records';
-      if (!data.length) { tbody.innerHTML='<tr><td colspan="15" style="text-align:center;color:var(--white-dim);padding:2rem">No records found</td></tr>'; return; }
-      tbody.innerHTML=data.map((r,i)=>`
+  // ── Build table rows ──────────────────────────
+  function buildRows(data) {
+    return data.map((r, i) => {
+      const sessLabel = getSessionLabel(r.session_id, r.session_name);
+      const sessBadges = sessLabel
+        ? sessLabel.split(',').map(s => `<span class="badge badge-info" style="margin:1px">${s.trim()}</span>`).join('')
+        : '—';
+      return `
         <tr>
           <td>${i+1}</td>
           <td><strong>${r.first_name} ${r.last_name}</strong></td>
@@ -98,123 +124,191 @@
           <td>${r.gender||'—'}</td>
           <td>${r.phone||'—'}</td>
           <td>${r.email||'—'}</td>
-          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.address||''}">${r.address||'—'}</td>
           <td>${r.church_name||'—'}</td>
           <td>${r.pastor_name||'—'}</td>
-        <td>${r.church_phone||'—'}</td>
-        <td>${r.event_name||'—'}</td>
-          <td>${r.emergency_contact_name||'—'} (${r.emergency_contact_phone||'—'})</td>
-          <td>${r.medical_conditions||'—'}</td>
-          <td>${new Date(r.registered_at).toLocaleDateString()}</td>
+          <td>${r.event_name||'—'}</td>
+          <td>${sessBadges}</td>
+          <td>${new Date(r.registered_at).toLocaleDateString('en-PH')}</td>
           <td style="display:flex;gap:.4rem">
             <button class="action-btn" data-action="view" data-id="${r.id}">View</button>
             <button class="action-btn del" data-action="del" data-id="${r.id}">Del</button>
           </td>
-        </tr>
-      `).join('');
-    } catch(e) { tbody.innerHTML='<tr><td colspan="15" style="text-align:center;color:var(--danger);padding:2rem">Failed to load</td></tr>'; }
+        </tr>`;
+    }).join('');
+  }
+
+  function getFiltered() {
+    const filterEv = document.getElementById('filterEventSel').value;
+    const search   = (document.getElementById('searchInput').value || '').toLowerCase();
+    let data = allRegs;
+    if (filterEv) data = data.filter(r => String(r.event_id) === String(filterEv));
+    if (search)   data = data.filter(r =>
+      `${r.first_name} ${r.last_name} ${r.church_name} ${r.event_name} ${r.email} ${r.phone}`.toLowerCase().includes(search)
+    );
+    return data;
   }
 
   function filterRender() {
-    const data=getFiltered();
-    document.getElementById('countLabel').textContent=data.length+' records';
-    const tbody=document.getElementById('regBody');
-    if (!data.length) { tbody.innerHTML='<tr><td colspan="15" style="text-align:center;color:var(--white-dim);padding:2rem">No records found</td></tr>'; return; }
-    tbody.innerHTML=data.map((r,i)=>`
-      <tr>
-        <td>${i+1}</td>
-        <td><strong>${r.first_name} ${r.last_name}</strong></td>
-        <td>${r.age||'—'}</td>
-        <td>${r.gender||'—'}</td>
-        <td>${r.phone||'—'}</td>
-        <td>${r.email||'—'}</td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.address||'—'}</td>
-        <td>${r.church_name||'—'}</td>
-        <td>${r.pastor_name||'—'}</td>
-        <td>${r.event_name||'—'}</td>
-        <td>${r.session_name ? '<span class="badge badge-info">'+r.session_name+'</span>' : '—'}</td>
-        <td>${r.emergency_contact_name||'—'} (${r.emergency_contact_phone||'—'})</td>
-        <td>${r.medical_conditions||'—'}</td>
-        <td>${new Date(r.registered_at).toLocaleDateString()}</td>
-        <td style="display:flex;gap:.4rem">
-          <button class="action-btn" data-action="view" data-id="${r.id}">View</button>
-          <button class="action-btn del" data-action="del" data-id="${r.id}">Del</button>
-        </td>
-      </tr>
-    `).join('');
+    const data = getFiltered();
+    document.getElementById('countLabel').textContent = data.length + ' records';
+    const tbody = document.getElementById('regBody');
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--white-dim);padding:2rem">No records found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = buildRows(data);
   }
 
+  async function render() {
+    const tbody = document.getElementById('regBody');
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--white-dim);padding:2rem">Loading…</td></tr>';
+    try {
+      allRegs = await Registrations.getAll();
+      await resolveSessionNames(allRegs);
+      filterRender();
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:var(--danger);padding:2rem">Failed to load registrations</td></tr>';
+    }
+  }
+
+  // ── View modal ────────────────────────────────
   function viewReg(id) {
-    const r=allRegs.find(x=>x.id===id);
+    const r = allRegs.find(x => x.id === id);
     if (!r) return;
-    document.getElementById('viewName').textContent=r.first_name+' '+r.last_name;
-    document.getElementById('viewContent').innerHTML=`
+    const sessLabel = getSessionLabel(r.session_id, r.session_name) || '—';
+    document.getElementById('viewName').textContent = r.first_name + ' ' + r.last_name;
+    document.getElementById('viewContent').innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.9rem">
         ${[
-          ['Age', r.age||'—'], ['Gender', r.gender||'—'], ['Contact', r.phone||'—'], ['Email', r.email||'—'],
-          ['Church', r.church_name||'—'], ['Cell Group', r.pastor_name||'—'], ['Church Attendance', r.church_phone||'—'], ['Event', r.event_name||'—'], ['Session', r.session_name||'—'],
-          ['Emergency Contact', (r.emergency_contact_name||'—')+' ('+( r.emergency_contact_phone||'—')+')'],
-          ['Relationship', r.emergency_contact_relation||'—'], ['Registered', new Date(r.registered_at).toLocaleString()]
-        ].map(([k,v])=>`<div><div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">${k}</div><div>${v}</div></div>`).join('')}
-        <div style="grid-column:1/-1"><div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Address</div><div>${r.address||'—'}</div></div>
-        <div style="grid-column:1/-1"><div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Medical Notes</div><div>${r.medical_conditions||'None'}</div></div>
-      </div>
-    `;
+          ['Age', r.age||'—'],
+          ['Gender', r.gender||'—'],
+          ['Contact', r.phone||'—'],
+          ['Email', r.email||'—'],
+          ['Church', r.church_name||'—'],
+          ['Cell Group / Pastor', r.pastor_name||'—'],
+          ['Church Attendance', r.church_phone||'—'],
+          ['Event', r.event_name||'—'],
+          ['Session(s)', sessLabel],
+          ['Emergency Contact', (r.emergency_contact_name||'—') + ' (' + (r.emergency_contact_phone||'—') + ')'],
+          ['Relationship', r.emergency_contact_relation||'—'],
+          ['Registered', new Date(r.registered_at).toLocaleString('en-PH')],
+        ].map(([k,v]) => `
+          <div>
+            <div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">${k}</div>
+            <div>${v}</div>
+          </div>`).join('')}
+        <div style="grid-column:1/-1">
+          <div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Address</div>
+          <div>${r.address||'—'}</div>
+        </div>
+        <div style="grid-column:1/-1">
+          <div style="color:var(--accent);font-size:.7rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px">Medical Notes</div>
+          <div>${r.medical_conditions||'None'}</div>
+        </div>
+        <div style="grid-column:1/-1;display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.25rem">
+          <span class="badge ${r.consent_liability?'badge-success':'badge-danger'}">Liability: ${r.consent_liability?'✓':'✗'}</span>
+          <span class="badge ${r.consent_photo?'badge-success':'badge-danger'}">Photo: ${r.consent_photo?'✓':'✗'}</span>
+          <span class="badge ${r.consent_rules?'badge-success':'badge-danger'}">Rules: ${r.consent_rules?'✓':'✗'}</span>
+        </div>
+      </div>`;
     openModal('viewModal');
   }
 
+  // ── Delete ────────────────────────────────────
   async function deleteReg(id) {
     if (!confirm('Remove this registration?')) return;
     try {
       await Registrations.delete(id);
-      allRegs=allRegs.filter(r=>r.id!==id);
+      allRegs = allRegs.filter(r => r.id !== id);
       filterRender();
-      toast('Registration removed.','info');
-    } catch(err) { toast('Delete failed: '+err.message,'error'); }
+      toast('Registration removed.', 'info');
+    } catch(err) { toast('Delete failed: ' + err.message, 'error'); }
   }
 
+  // ── Excel export ──────────────────────────────
   async function exportExcel() {
     try {
-      toast('Preparing Excel file… ⏳', 'info');
+      toast('Preparing Excel… ⏳', 'info');
       const filterEv = document.getElementById('filterEventSel').value || '';
       const url = Registrations.exportJsonURL(filterEv);
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Export failed');
+      const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('ky_token') } });
+      if (!res.ok) throw new Error('Export request failed');
       const rows = await res.json();
 
-      // Build worksheet data
-      const headers = ['#','Event','Session','First Name','Last Name','Age','Gender','Phone','Email','Address',
-        'Church','Cell Group','Church Duration','Emergency Contact','Emergency Phone','Relationship',
-        'Medical','Consent Liability','Consent Photo','Consent Rules','Registered At'];
-      const data = [headers, ...rows.map((r,i) => [
-        i+1, r.event_name||'', r.session_name||'', r.first_name, r.last_name, r.age||'', r.gender||'',
-        r.phone||'', r.email||'', r.address||'', r.church_name||'', r.pastor_name||'', r.church_phone||'',
-        r.emergency_contact_name||'', r.emergency_contact_phone||'', r.emergency_contact_relation||'',
-        r.medical_conditions||'', r.consent_liability?'Yes':'No', r.consent_photo?'Yes':'No', r.consent_rules?'Yes':'No',
-        new Date(r.registered_at).toLocaleString()
-      ])];
+      const headers = [
+        '#', 'Event', 'Session(s)', 'First Name', 'Last Name', 'Age', 'Gender',
+        'Phone', 'Email', 'Address', 'Church', 'Cell Group / Pastor',
+        'Church Duration', 'Emergency Contact', 'Emergency Phone', 'Relationship',
+        'Medical Notes', 'Consent Liability', 'Consent Photo', 'Consent Rules', 'Registered At'
+      ];
 
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      // Auto column widths
-      ws['!cols'] = headers.map((h,i) => ({ wch: Math.max(h.length, 15) }));
+      const sheetData = [headers, ...rows.map((r, i) => {
+        const sessLabel = getSessionLabel(r.session_id, r.session_name) || '';
+        return [
+          i + 1,
+          r.event_name || '',
+          sessLabel,
+          r.first_name || '',
+          r.last_name  || '',
+          r.age        || '',
+          r.gender     || '',
+          r.phone      || '',
+          r.email      || '',
+          r.address    || '',
+          r.church_name  || '',
+          r.pastor_name  || '',
+          r.church_phone || '',
+          r.emergency_contact_name     || '',
+          r.emergency_contact_phone    || '',
+          r.emergency_contact_relation || '',
+          r.medical_conditions || '',
+          r.consent_liability ? 'Yes' : 'No',
+          r.consent_photo     ? 'Yes' : 'No',
+          r.consent_rules     ? 'Yes' : 'No',
+          new Date(r.registered_at).toLocaleString('en-PH'),
+        ];
+      })];
+
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+      ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length + 4, 16) }));
+
+      // Bold header row
+      headers.forEach((_, ci) => {
+        const cell = ws[XLSX.utils.encode_cell({ r: 0, c: ci })];
+        if (cell) cell.s = { font: { bold: true } };
+      });
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Registrations');
-      const ev = document.getElementById('filterEventSel');
-      const evName = ev.options[ev.selectedIndex]?.text || 'All';
+
+      const evSel = document.getElementById('filterEventSel');
+      const evName = evSel.options[evSel.selectedIndex]?.text.replace(/[^a-zA-Z0-9]/g, '_') || 'All';
       XLSX.writeFile(wb, `Registrations_${evName}_${new Date().toISOString().substring(0,10)}.xlsx`);
       toast('Excel downloaded! 📊', 'success');
-    } catch(err) { toast('Export failed: '+err.message, 'error'); }
+    } catch(err) { toast('Export failed: ' + err.message, 'error'); }
+  }
+
+  // ── Init ──────────────────────────────────────
+  async function init() {
+    try {
+      const events = await Events.getSlim();
+      const sel = document.getElementById('filterEventSel');
+      events.forEach(e => {
+        const o = document.createElement('option');
+        o.value = e.id; o.textContent = e.name;
+        sel.appendChild(o);
+      });
+    } catch(e) {}
+    await render();
   }
 
   init();
 
-  // Bind static controls
-  document.getElementById('viewModalCloseBtn').addEventListener('click', ()=>closeModal('viewModal'));
+  document.getElementById('viewModalCloseBtn').addEventListener('click', () => closeModal('viewModal'));
   document.getElementById('filterEventSel').addEventListener('change', render);
-  document.getElementById('searchInput').addEventListener('input', render);
+  document.getElementById('searchInput').addEventListener('input', filterRender);
   document.getElementById('exportBtn').addEventListener('click', exportExcel);
 
-  // Table row delegation
   document.getElementById('regBody').addEventListener('click', function(e) {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
