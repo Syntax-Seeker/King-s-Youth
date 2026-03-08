@@ -48,7 +48,7 @@
 
   async function loadAndRender() {
     try { 
-      calEvents = await Events.getAll();
+      calEvents = await Events.getSlim();
       // Normalize dates to YYYY-MM-DD string (MySQL may return full ISO string)
       calEvents = calEvents.map(e => ({
         ...e,

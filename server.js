@@ -104,6 +104,30 @@ app.get('/api/events', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// GET /api/events/slim — no media column, for dashboard/calendar (no auth needed)
+app.get('/api/events/slim', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT id,name,date,end_date,time,deadline,location,description,max_participants,fee,status,created_at FROM events ORDER BY date ASC'
+    );
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/registrations/slim — no heavy fields, for dashboard (admin only)
+app.get('/api/registrations/slim', authRequired, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      \`SELECT r.id, r.first_name, r.last_name, r.church_name, r.registered_at, r.event_id,
+       e.name as event_name
+       FROM registrations r
+       LEFT JOIN events e ON r.event_id = e.id
+       ORDER BY r.registered_at DESC LIMIT 50\`
+    );
+    res.json(rows);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // GET /api/events/:id
 app.get('/api/events/:id', async (req, res) => {
   try {

@@ -63,6 +63,7 @@ function requireAdmin() {
 // ── Events API ────────────────────────────────
 const Events = {
   getAll: () => api('/events'),
+  getSlim: () => api('/events/slim'),
   getOne: (id) => api(`/events/${id}`),
   getCount: (id) => api(`/events/${id}/registration-count`),
   create: (data) => api('/events', { method: 'POST', body: JSON.stringify(data) }),
@@ -73,6 +74,7 @@ const Events = {
 // ── Registrations API ─────────────────────────
 const Registrations = {
   getAll: (event_id) => api('/registrations' + (event_id ? `?event_id=${event_id}` : '')),
+  getSlim: () => api('/registrations/slim'),
   create: (data) => api('/registrations', { method: 'POST', body: JSON.stringify(data) }),
   delete: (id) => api(`/registrations/${id}`, { method: 'DELETE' }),
   exportURL: (event_id) => `${API_BASE}/registrations/export${event_id ? `?event_id=${event_id}` : ''}`

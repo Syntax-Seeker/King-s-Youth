@@ -58,8 +58,8 @@
     try {
       const [stats, regs, events] = await Promise.all([
         Stats.get(),
-        Registrations.getAll(),
-        Events.getAll()
+        Registrations.getSlim(),
+        Events.getSlim()
       ]);
 
       document.getElementById('dashReg').textContent    = stats.registrations;
