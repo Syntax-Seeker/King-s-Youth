@@ -288,16 +288,19 @@ async function loadFooterInfo() {
   } catch(e) { /* fail silently */ }
 }
 
+// ── Nav logo loader ───────────────────────────
+// Called after nav.html is injected to load custom logo from settings
 async function loadNavLogo() {
   try {
-    const res = await fetch(API_BASE.replace('/api', '') + '/api/settings/public');
+    const res = await fetch('https://king-s-youth-production.up.railway.app/api/settings/public');
+    if (!res.ok) return;
     const data = await res.json();
-      if (data.site_logo) {
-        const icon = document.getElementById('navLogoIcon');
-        if (icon) {
-          icon.style.cssText = 'width:40px;height:40px;overflow:hidden;background:transparent;clip-path:none;padding:0';
-          icon.innerHTML = `<img src="${data.site_logo}" style="width:100%;height:100%;object-fit:contain">`;
-        }
+    if (data.site_logo) {
+      const icon = document.getElementById('navLogoIcon');
+      if (icon) {
+        icon.style.cssText = 'width:40px;height:40px;overflow:hidden;background:transparent;clip-path:none;padding:0;flex-shrink:0';
+        icon.innerHTML = '<img src="' + data.site_logo + '" style="width:100%;height:100%;object-fit:contain">';
       }
+    }
   } catch(e) {}
 }
