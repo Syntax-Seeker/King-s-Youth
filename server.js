@@ -1,6 +1,7 @@
 // =============================================
 //  KING-YOUTH | GREATER — Node.js/Express API
 // =============================================
+const path       = require('path');
 const express    = require('express');
 const mysql      = require('mysql2/promise');
 const bcrypt     = require('bcrypt');
@@ -21,6 +22,12 @@ app.use(helmet({
 app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
 app.use(express.json({ limit: '20mb' })); // large for base64 images
 app.use(express.static('public')); // serve HTML files
+
+// Favicon for browser tab
+app.get('/favicon.ico', (req, res) => {
+  res.type('image/svg+xml');
+  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
 
 // ── DB Pool ────────────────────────────────────
 const db = mysql.createPool({
