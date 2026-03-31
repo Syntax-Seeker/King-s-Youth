@@ -3,7 +3,7 @@
    ============================================= */
 
 // ── Config — change this to your server URL ───
-const API_BASE = 'https://king-s-youth-production.up.railway.app/api';
+const API_BASE = 'https://king-s-youth.onrender.com/api';
 
 // ── Cart (stays in memory/sessionStorage) ─────
 const CART = JSON.parse(sessionStorage.getItem('greater_cart') || '[]');
