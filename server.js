@@ -38,6 +38,12 @@ const db = mysql.createPool({
   ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 });
 
+// Favicon for browser tab
+app.get('/favicon.ico', (req, res) => {
+  res.type('image/svg+xml');
+  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
 // Increase packet size for base64 image storage
 db.getConnection().then(conn => {
   conn.query("SET GLOBAL max_allowed_packet=67108864").catch(()=>{});
