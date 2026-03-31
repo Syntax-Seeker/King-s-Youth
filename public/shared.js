@@ -270,7 +270,7 @@ function exportWithAuth(url) {
 // Call this after injecting footer.html into the DOM
 async function loadFooterInfo() {
   try {
-    const res = await fetch('https://king-s-youth-production.up.railway.app/api/settings/public');
+    const res = await fetch('https://king-s-youth.onrender.com/api/settings/public');
     if (!res.ok) return;
     const d = await res.json();
 
@@ -305,7 +305,7 @@ async function loadFooterInfo() {
 // Called after nav.html is injected to load custom logo from settings
 async function loadNavLogo() {
   try {
-    const res = await fetch('https://king-s-youth-production.up.railway.app/api/settings/public');
+    const res = await fetch('https://king-s-youth.onrender.com/api/settings/public');
     if (!res.ok) return;
     const data = await res.json();
     if (data.site_logo) {
