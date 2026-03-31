@@ -18,7 +18,7 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: false
 }));
-app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
+app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '20mb' })); // large for base64 images
 app.use(express.static('public')); // serve HTML files
 

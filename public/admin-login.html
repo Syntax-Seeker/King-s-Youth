@@ -38,7 +38,7 @@
     <div class="form-group"><label class="form-label">Username</label><input class="form-input" type="text" id="loginUser" placeholder="admin" autocomplete="username"></div>
     <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
     <p id="loginError" style="color:var(--danger);font-size:.85rem;margin-bottom:1rem;text-align:center;display:none">⚠️ Invalid credentials. Please try again.</p>
-    <button class="btn btn-primary" style="width:100%;padding:.85rem" onclick="doLogin()">Sign In</button>
+    <button class="btn btn-primary" style="width:100%;padding:.85rem" id="loginBtn">Sign In</button>
 
     <div style="text-align:center;margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border)">
     
@@ -59,6 +59,7 @@
   async function doLogin() {
     const u = document.getElementById('loginUser').value.trim();
     const p = document.getElementById('loginPass').value;
+    document.getElementById('loginBtn').addEventListener('click', doLogin);
     const btn = document.querySelector('.btn-primary');
     btn.textContent = 'Signing in…'; btn.disabled = true;
     try {
