@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>King's-Youth | GREATER — Home</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>King-Youth | GREATER — Home</title>
   <link rel="stylesheet" href="shared.css">
   <style>
     .hero { min-height: 100vh; background: var(--black); position: relative; overflow: hidden; display: flex; align-items: center; }
@@ -68,9 +67,9 @@
     <div class="hero-bg"></div>
     <div class="hero-grid"></div>
     <div class="hero-content">
-      <div class="hero-eyebrow">King's Youth United</div>
+      <div class="hero-eyebrow">King's Youth Ministry</div>
       <h1 class="hero-title">GREATER</h1>
-      <p class="hero-sub"><em>Assignment Involvement Movement</em></p>
+      <p class="hero-sub">A generation rising. A movement igniting. Come be part of something greater than yourself.</p>
       <div id="heroPill" style="display:none;margin:1.5rem auto 0;max-width:fit-content;background:rgba(0,180,255,.08);border:1px solid rgba(0,180,255,.3);border-radius:999px;padding:.5rem 1.25rem;display:flex;align-items:center;gap:.6rem;font-size:.85rem;color:var(--white-dim)">
         <span style="width:8px;height:8px;border-radius:50%;background:var(--blue-light);flex-shrink:0;box-shadow:0 0 8px var(--blue)"></span>
         <span>Next Event: </span><span id="heroPillName" style="color:#fff;font-weight:600"></span>
@@ -198,30 +197,17 @@
     const sessWrap = document.getElementById('evModalSessionsWrap');
     sessWrap.style.display = 'none';
     try {
-      const sessionsRaw = await Sessions.getByEvent(id);
-      const sessions = await Promise.all(sessionsRaw.map(async function(s) {
-        if (!s.max_participants) return s;
-        try {
-          const r = await Sessions.getCount(s.id);
-          return { ...s, registered: r.count };
-        } catch {
-          return s;
-        }
-      }));
+      const sessions = await Sessions.getByEvent(id);
       if (sessions && sessions.length) {
         sessWrap.style.display = 'block';
         document.getElementById('evModalSessions').innerHTML = sessions.map(function(s) {
           const info = [s.date ? formatDate(String(s.date).substring(0,10)) : '', s.time||''].filter(Boolean).join(' · ');
-          const sessSpotsLeft = s.max_participants ? Math.max(0, s.max_participants - (s.registered||0)) : null;
-          const sessLabel = s.max_participants
-            ? (sessSpotsLeft === 0 ? 'Full' : (sessSpotsLeft + ' of ' + s.max_participants + ' slots left'))
-            : '';
           return '<div class="ev-session-card">' +
             '<div><div class="ev-session-name">' + s.name + '</div>' +
             (info ? '<div class="ev-session-info">' + info + '</div>' : '') +
             (s.description ? '<div class="ev-session-info" style="font-style:italic">' + s.description + '</div>' : '') +
             '</div>' +
-            (sessLabel ? '<div class="ev-session-spots">' + sessLabel + '</div>' : '') +
+            (s.max_participants ? '<div class="ev-session-spots">' + s.max_participants + ' slots</div>' : '') +
             '</div>';
         }).join('');
       }
@@ -248,18 +234,7 @@
   // ── Load home data ────────────────────────────
   async function loadHome() {
     try {
-      const [stats, eventsRaw] = await Promise.all([Stats.get(), Events.getAll()]);
-
-      // attach live registration counts to events so slots/capacity reflect current usage
-      const events = await Promise.all(eventsRaw.map(async function(e) {
-        try {
-          const resp = await Events.getCount(e.id);
-          return { ...e, registered: resp.count };
-        } catch {
-          return { ...e, registered: 0 };
-        }
-      }));
-
+      const [stats, events] = await Promise.all([Stats.get(), Events.getAll()]);
       homeEvents = events;
 
       document.getElementById('statReg').textContent    = stats.registrations;

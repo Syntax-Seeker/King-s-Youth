@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>King's	-Youth | Register</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>King-Youth | Register</title>
   <link rel="stylesheet" href="shared.css">
   <style>
     .reg-hero { background: var(--deep); border-bottom: 1px solid var(--border); padding: 5rem 2rem 3rem; text-align: center; }
@@ -155,17 +154,7 @@
     wrap.style.display = 'none';
     if (!eventId) return;
     try {
-      const sessionsRaw = await Sessions.getByEvent(eventId);
-      // attach live registration counts per session so slots reflect current usage
-      const sessions = await Promise.all(sessionsRaw.map(async s => {
-        if (!s.max_participants) return s;
-        try {
-          const { count } = await Sessions.getCount(s.id);
-          return { ...s, registered: count };
-        } catch {
-          return s;
-        }
-      }));
+      const sessions = await Sessions.getByEvent(eventId);
       if (!sessions || !sessions.length) return;
 
       // Group sessions by date
@@ -189,13 +178,7 @@
         dayDiv.appendChild(heading);
 
         groups[day].forEach(function(s) {
-          const sessSpotsLeft = s.max_participants ? Math.max(0, s.max_participants - (s.registered||0)) : null;
-          const slotsLabel = s.max_participants
-            ? (sessSpotsLeft === 0
-                ? 'Full'
-                : `${sessSpotsLeft} of ${s.max_participants} slots left`)
-            : '';
-          const info = [s.time||'', slotsLabel].filter(Boolean).join(' · ');
+          const info = [s.time||'', s.max_participants ? s.max_participants+' slots' : ''].filter(Boolean).join(' · ');
           const radioId = 'sess_radio_' + s.id;
 
           const row = document.createElement('label');

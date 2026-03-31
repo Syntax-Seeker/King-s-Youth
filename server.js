@@ -1,7 +1,6 @@
 // =============================================
 //  KING-YOUTH | GREATER — Node.js/Express API
 // =============================================
-const path       = require('path');
 const express    = require('express');
 const mysql      = require('mysql2/promise');
 const bcrypt     = require('bcrypt');
@@ -23,16 +22,10 @@ app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
 app.use(express.json({ limit: '20mb' })); // large for base64 images
 app.use(express.static('public')); // serve HTML files
 
-// Favicon for browser tab
-app.get('/favicon.ico', (req, res) => {
-  res.type('image/svg+xml');
-  res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
-});
-
 // ── DB Pool ────────────────────────────────────
 const db = mysql.createPool({
   host:     process.env.DB_HOST,
-  port:     process.env.DB_PORT,
+  port:     process.env.DB_PORT     || 3306,
   user:     process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
@@ -40,9 +33,10 @@ const db = mysql.createPool({
   connectionLimit:    10,
   connectTimeout:     60000,
   keepAliveInitialDelay: 10000,
-  enableKeepAlive: true
+  enableKeepAlive: true,
+  // Aiven requires SSL — ignored safely if not needed
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined
 });
-
 
 // Increase packet size for base64 image storage
 db.getConnection().then(conn => {

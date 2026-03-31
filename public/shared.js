@@ -192,7 +192,6 @@ function setActiveNav() {
 // ── Sessions API ──────────────────────────────
 const Sessions = {
   getByEvent: (eventId) => api(`/events/${eventId}/sessions`),
-  getCount:   (id)      => api(`/sessions/${id}/count`),
   create: (eventId, data) => api(`/events/${eventId}/sessions`, { method:'POST', body:JSON.stringify(data) }),
   update: (id, data) => api(`/sessions/${id}`, { method:'PUT', body:JSON.stringify(data) }),
   delete: (id) => api(`/sessions/${id}`, { method:'DELETE' }),
