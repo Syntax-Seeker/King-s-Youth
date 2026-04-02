@@ -329,3 +329,13 @@ tr:hover td { background: rgba(29,110,245,.05); }
 /* ── Events grid ── */
 .events-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(340px,1fr)); gap: 1.5rem; }
 @media (max-width: 480px) { .events-grid { grid-template-columns: 1fr; } }
+
+/* ── Global responsive refinements ── */
+@media (max-width: 768px) {
+  .section { padding: 3rem 1rem; }
+  .btn-lg { padding: .75rem 1.1rem; font-size: 1rem; }
+  .modal { padding: 1.25rem; max-height: calc(100vh - 1rem); }
+  .toast-container { right: .75rem; left: .75rem; bottom: 1rem; }
+  .toast { min-width: 0; width: 100%; }
+  .table-search input { width: 100%; min-width: 0; }
+}

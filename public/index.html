@@ -58,6 +58,48 @@
     .stats-strip-inner { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 2rem; text-align: center; }
     .stat-num { font-family: 'Bebas Neue',cursive; font-size: 3rem; line-height: 1; }
     .stat-lbl { color: var(--white-dim); font-size: .85rem; letter-spacing: 2px; text-transform: uppercase; margin-top: .25rem; }
+
+    @media (max-width: 1024px) {
+      .hero-content { padding: 3rem 1.5rem; }
+      .events-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+      .stats-strip-inner { padding: 2rem 1.5rem; gap: 1.25rem; }
+    }
+
+    @media (max-width: 768px) {
+      .hero { min-height: 80vh; }
+      .hero-content { padding: 2.25rem 1rem; }
+      .hero-sub { font-size: 1rem; }
+      .hero-eyebrow { letter-spacing: 4px; padding: .35rem 1rem; }
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .hero-actions .btn { width: 100%; }
+      .events-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .event-card-footer { flex-direction: column; }
+      .merch-feature-wrap { grid-template-columns: 1fr !important; gap: 1.5rem !important; padding: 2.5rem 1rem !important; }
+      .stats-strip-inner { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ev-modal-overlay { padding: .5rem; align-items: flex-end; }
+      .ev-modal-box {
+        max-width: 100%;
+        max-height: calc(100vh - .5rem);
+        border-radius: 16px 16px 0 0;
+      }
+      .ev-modal-hero { height: 180px; border-radius: 16px 16px 0 0; }
+      .ev-modal-body { padding: 1rem; }
+      .ev-modal-title { font-size: 1.6rem; }
+      .ev-modal-details { grid-template-columns: 1fr; gap: .5rem; }
+      .ev-session-card { flex-direction: column; align-items: flex-start; }
+      .ev-session-spots { white-space: normal; }
+      .ev-modal-footer { justify-content: stretch; }
+      .ev-modal-footer .btn { width: 100%; text-align: center; }
+    }
+
+    @media (max-width: 420px) {
+      .hero-title { letter-spacing: 2px; }
+      .merch-feature-wrap { padding: 2rem 1rem !important; }
+      .stats-strip-inner { grid-template-columns: 1fr; }
+      .event-body { padding: 1rem; }
+      .event-title { font-size: 1.35rem; }
+      .ev-modal-hero { height: 150px; }
+    }
   </style>
 </head>
 <body>
@@ -105,7 +147,7 @@
   </div>
 
   <div style="background:var(--deep);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-    <div style="max-width:1200px;margin:0 auto;padding:4rem 2rem;display:grid;grid-template-columns:1fr auto;gap:4rem;align-items:center">
+    <div class="merch-feature-wrap" style="max-width:1200px;margin:0 auto;padding:4rem 2rem;display:grid;grid-template-columns:1fr auto;gap:4rem;align-items:center">
       <div>
         <span class="section-eyebrow">GREATER Collection</span>
         <h2 class="section-title" style="margin-bottom:1rem">Official <span>Merch</span></h2>
