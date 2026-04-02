@@ -13,27 +13,39 @@
     <!-----------this is my comment to make sure to put an 's on king if you ever change the contents of this file'-->
     </div>
   </a>
+  <button class="nav-menu-btn" id="navMenuBtn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenuPanel">
+    <span></span><span></span><span></span>
+  </button>
   <div class="nav-links">
-    <a href="index.html"  data-page="index.html">Home</a>
-    <a href="events.html" data-page="events.html">Events</a>
-    <a href="shop.html"   data-page="shop.html">Merch</a>
-    <a href="about.html"  data-page="about.html">About</a>
-  </div>
-  <div class="nav-actions">
-    <a href="shop.html" id="navCartBtn" class="btn btn-outline" style="position:relative;cursor:pointer">
-      🛒 Cart
+    <a href="index.html"  class="nav-link" data-page="index.html">Home</a>
+    <a href="events.html" class="nav-link" data-page="events.html">Events</a>
+    <a href="shop.html"   class="nav-link" data-page="shop.html">Merch</a>
+    <a href="about.html"  class="nav-link" data-page="about.html">About</a>
+    <a href="shop.html" id="navCartBtn" class="btn btn-outline nav-cart-btn" style="position:relative;cursor:pointer">
+      🛒
       <span class="cart-badge" id="cartBadge" style="display:none">0</span>
     </a>
-    <a href="admin-login.html" class="btn btn-primary">Admin</a>
+  </div>
+  <div class="nav-actions" id="navMenuPanel">
+    <a href="index.html"  class="nav-link" data-page="index.html">Home</a>
+    <a href="events.html" class="nav-link" data-page="events.html">Events</a>
+    <a href="shop.html"   class="nav-link" data-page="shop.html">Merch</a>
+    <a href="about.html"  class="nav-link" data-page="about.html">About</a>
+    <a href="shop.html" id="navCartBtnMobile" class="btn btn-outline nav-cart-btn" style="position:relative;cursor:pointer">
+      🛒
+      <span class="cart-badge" id="cartBadgeMobile" style="display:none">0</span>
+    </a>
   </div>
 </nav>
 <script>
   // If on shop page, make cart button open the panel instead of navigating
   (function() {
-    var btn = document.getElementById('navCartBtn');
-    if (!btn) return;
+    var desktopBtn = document.getElementById('navCartBtn');
+    var mobileBtn = document.getElementById('navCartBtnMobile');
     var isShop = window.location.pathname.indexOf('shop.html') !== -1;
-    if (isShop) {
+    [desktopBtn, mobileBtn].forEach(function(btn) {
+      if (!btn) return;
+      if (!isShop) return;
       btn.addEventListener('click', function(e) {
         e.preventDefault();
         // Wait for openCart to be defined (shop.html defines it)
@@ -41,7 +53,38 @@
           openCart();
         }
       });
-    }
+    });
+  })();
+
+  // Keep mobile/desktop cart badges in sync
+  (function() {
+    var desktopBadge = document.getElementById('cartBadge');
+    var mobileBadge = document.getElementById('cartBadgeMobile');
+    if (!desktopBadge || !mobileBadge) return;
+    var observer = new MutationObserver(function() {
+      mobileBadge.textContent = desktopBadge.textContent;
+      mobileBadge.style.display = desktopBadge.style.display;
+    });
+    observer.observe(desktopBadge, { childList: true, characterData: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+    mobileBadge.textContent = desktopBadge.textContent;
+    mobileBadge.style.display = desktopBadge.style.display;
+  })();
+
+  // Mobile menu
+  (function() {
+    var nav = document.querySelector('nav');
+    var btn = document.getElementById('navMenuBtn');
+    if (!nav || !btn) return;
+    btn.addEventListener('click', function() {
+      var isOpen = nav.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    document.querySelectorAll('#navMenuPanel a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        nav.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+    });
   })();
 
   // Load custom logo if set

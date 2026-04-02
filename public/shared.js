@@ -175,9 +175,14 @@ function getCartCount() {
   return CART.reduce((s, i) => s + i.qty, 0);
 }
 function updateCartBadge() {
-  const badge = document.getElementById('cartBadge');
   const count = getCartCount();
-  if (badge) { badge.textContent = count; badge.style.display = count ? 'flex' : 'none'; }
+  ['cartBadge', 'cartBadgeMobile'].forEach(id => {
+    const badge = document.getElementById(id);
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count ? 'flex' : 'none';
+    }
+  });
 }
 
 // ── Nav helpers ───────────────────────────────

@@ -11,10 +11,16 @@
     .login-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 60% 60% at 50% 50%, #0a1f4a 0%, transparent 70%); }
     .login-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px); background-size: 60px 60px; opacity: .2; }
     .login-card { position: relative; z-index: 1; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 3rem; width: 100%; max-width: 420px; box-shadow: 0 0 80px var(--blue-glow); }
-    .login-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 2rem; }
-    .login-logo-icon { width: 48px; height: 48px; background: var(--blue); clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue',cursive; font-size: 22px; color: #fff; flex-shrink: 0; }
+    .login-logo { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 2rem; text-align: left; }
+    .login-logo-icon { width: 52px; height: 52px; background: var(--blue); clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue',cursive; font-size: 24px; color: #fff; flex-shrink: 0; }
+    .login-logo-title { font-family:'Bebas Neue',cursive; font-size:clamp(1.45rem, 1vw + 1rem, 1.85rem); letter-spacing:2px; line-height:1; }
+    .login-logo-sub { font-size:clamp(.56rem, .2vw + .5rem, .68rem); color:var(--accent); letter-spacing:4px; text-transform:uppercase; margin-top:2px; }
     .shake { animation: shake .4s ease; }
     @keyframes shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-8px); } 40%,80% { transform:translateX(8px); } }
+    @media (max-width: 480px) {
+      .login-card { padding: 2rem 1.1rem; }
+      .login-logo { justify-content: flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -25,8 +31,8 @@
     <div class="login-logo">
       <div class="login-logo-icon">K</div>
       <div>
-        <div style="font-family:'Bebas Neue',cursive;font-size:1.7rem;letter-spacing:2px;line-height:1">King-Youth</div>
-        <div style="font-size:.55rem;color:var(--accent);letter-spacing:4px;text-transform:uppercase">GREATER</div>
+        <div class="login-logo-title">King's-Youth</div>
+        <div class="login-logo-sub">Admin Portal</div>
       </div>
     </div>
     <div style="text-align:center;margin-bottom:2rem">
