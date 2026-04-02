@@ -193,6 +193,41 @@ function setActiveNav() {
   });
 }
 
+function initNav() {
+  const nav = document.querySelector('nav');
+  if (!nav || nav.dataset.jsInit === '1') return;
+  nav.dataset.jsInit = '1';
+
+  const menuBtn = document.getElementById('navMenuBtn');
+  const menuPanel = document.getElementById('navMenuPanel');
+  if (menuBtn && menuPanel) {
+    menuBtn.addEventListener('click', function() {
+      const isOpen = nav.classList.toggle('open');
+      menuPanel.classList.toggle('open', isOpen);
+      menuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    menuPanel.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        nav.classList.remove('open');
+        menuPanel.classList.remove('open');
+        menuBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+  }
+
+  const isShop = window.location.pathname.indexOf('shop.html') !== -1;
+  ['navCartBtn', 'navCartBtnMobile'].forEach(function(id) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.addEventListener('click', function(e) {
+      if (!isShop) return;
+      e.preventDefault();
+      if (typeof openCart === 'function') openCart();
+    });
+  });
+}
+
 
 // ── Sessions API ──────────────────────────────
 const Sessions = {
