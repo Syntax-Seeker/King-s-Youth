@@ -21,7 +21,7 @@
     <a href="events.html" class="nav-link" data-page="events.html">Events</a>
     <a href="shop.html"   class="nav-link" data-page="shop.html">Merch</a>
     <a href="about.html"  class="nav-link" data-page="about.html">About</a>
-    <a href="shop.html" id="navCartBtn" class="btn btn-outline nav-cart-btn" style="position:relative;cursor:pointer">
+    <a href="shop.html" id="navCartBtn" class="btn nav-cart-btn" style="position:relative;cursor:pointer">
       🛒
       <span class="cart-badge" id="cartBadge" style="display:none">0</span>
     </a>
@@ -31,7 +31,7 @@
     <a href="events.html" class="nav-link" data-page="events.html">Events</a>
     <a href="shop.html"   class="nav-link" data-page="shop.html">Merch</a>
     <a href="about.html"  class="nav-link" data-page="about.html">About</a>
-    <a href="shop.html" id="navCartBtnMobile" class="btn btn-outline nav-cart-btn" style="position:relative;cursor:pointer">
+    <a href="shop.html" id="navCartBtnMobile" class="btn nav-cart-btn" style="position:relative;cursor:pointer">
       🛒
       <span class="cart-badge" id="cartBadgeMobile" style="display:none">0</span>
     </a>
@@ -88,18 +88,5 @@
   })();
 
   // Load custom logo if set
-  (async function loadNavLogo() {
-    try {
-      const res = await fetch('https://king-s-youth.onrender.com/api/settings/public');
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.site_logo) {
-        const icon = document.getElementById('navLogoIcon');
-        if (icon) {
-          icon.style.cssText = 'width:40px;height:40px;overflow:hidden;background:transparent;clip-path:none;padding:0';
-          icon.innerHTML = '<img src="' + data.site_logo + '" style="width:100%;height:100%;object-fit:contain">';
-        }
-      }
-    } catch(e) {}
-  })();
+  loadNavLogo('navLogoIcon');
 </script>

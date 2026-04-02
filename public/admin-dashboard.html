@@ -52,6 +52,7 @@
   requireAdmin();
   fetch('admin-nav.html').then(r=>r.text()).then(h=>{
     document.getElementById('admin-nav-root').innerHTML=h;
+    loadNavLogo('adminSideLogoIcon', 'cover');
     document.querySelectorAll('.admin-nav-item[data-page]').forEach(a=>{ a.classList.toggle('active', a.dataset.page==='admin-dashboard.html'); });
   });
 

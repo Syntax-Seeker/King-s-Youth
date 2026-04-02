@@ -308,16 +308,17 @@ async function loadFooterInfo() {
 
 // ── Nav logo loader ───────────────────────────
 // Called after nav.html is injected to load custom logo from settings
-async function loadNavLogo() {
+async function loadNavLogo(targetId = 'navLogoIcon', mode = 'contain') {
   try {
     const res = await fetch('https://king-s-youth.onrender.com/api/settings/public');
     if (!res.ok) return;
     const data = await res.json();
     if (data.site_logo) {
-      const icon = document.getElementById('navLogoIcon');
+      const icon = document.getElementById(targetId);
       if (icon) {
-        icon.style.cssText = 'width:40px;height:40px;overflow:hidden;background:transparent;clip-path:none;padding:0;flex-shrink:0';
-        icon.innerHTML = '<img src="' + data.site_logo + '" style="width:100%;height:100%;object-fit:contain">';
+        const fit = mode === 'cover' ? 'cover' : 'contain';
+        icon.style.cssText = 'overflow:hidden;background:transparent;clip-path:none;padding:0;flex-shrink:0';
+        icon.innerHTML = '<img src="' + data.site_logo + '" style="width:100%;height:100%;object-fit:' + fit + '">';
       }
     }
   } catch(e) {}

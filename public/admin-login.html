@@ -29,7 +29,7 @@
   <div class="login-grid"></div>
   <div class="login-card" id="loginCard">
     <div class="login-logo">
-      <div class="login-logo-icon">K</div>
+      <div class="login-logo-icon" id="loginLogoIcon">K</div>
       <div>
         <div class="login-logo-title">King's-Youth</div>
         <div class="login-logo-sub">Admin Portal</div>
@@ -57,6 +57,8 @@
 <div class="toast-container" id="toastContainer"></div>
 <script src="shared.js"></script>
 <script>
+  loadNavLogo('loginLogoIcon');
+
   // If already logged in, go to dashboard
   if (isLoggedIn()) window.location.href = 'admin-dashboard.html';
 
