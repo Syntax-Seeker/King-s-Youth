@@ -317,7 +317,12 @@ async function loadNavLogo(targetId = 'navLogoIcon', mode = 'contain') {
       const icon = document.getElementById(targetId);
       if (icon) {
         const fit = mode === 'cover' ? 'cover' : 'contain';
-        icon.style.cssText = 'overflow:hidden;background:transparent;clip-path:none;padding:0;flex-shrink:0';
+        // Keep the element's existing width/height from CSS or inline styles.
+        icon.style.overflow = 'hidden';
+        icon.style.background = 'transparent';
+        icon.style.clipPath = 'none';
+        icon.style.padding = '0';
+        icon.style.flexShrink = '0';
         icon.innerHTML = '<img src="' + data.site_logo + '" style="width:100%;height:100%;object-fit:' + fit + '">';
       }
     }

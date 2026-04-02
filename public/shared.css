@@ -164,13 +164,15 @@ nav {
     top: 64px;
     left: 0;
     right: 0;
+    z-index: 1005;
     background: rgba(5,8,16,.98);
     border-bottom: 1px solid var(--border);
     padding: .8rem 1rem 1rem;
     flex-direction: column;
     gap: .4rem;
   }
-  nav.open .nav-actions { display: flex; }
+  nav.open .nav-actions,
+  .nav-actions.open { display: flex; }
   .nav-actions .nav-link {
     display: block;
     width: 100%;

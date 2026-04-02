@@ -72,21 +72,25 @@
 
   // Mobile menu
   (function() {
-    var nav = document.querySelector('nav');
     var btn = document.getElementById('navMenuBtn');
-    if (!nav || !btn) return;
+    var panel = document.getElementById('navMenuPanel');
+    if (!btn || !panel) return;
+    var nav = btn.closest('nav');
+    if (!nav) return;
     btn.addEventListener('click', function() {
-      var isOpen = nav.classList.toggle('open');
+      var isOpen = nav.classList.toggle('open') || panel.classList.toggle('open');
+      panel.classList.toggle('open', isOpen);
       btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
     });
     document.querySelectorAll('#navMenuPanel a').forEach(function(link) {
       link.addEventListener('click', function() {
         nav.classList.remove('open');
+        panel.classList.remove('open');
         btn.setAttribute('aria-expanded', 'false');
       });
     });
   })();
 
   // Load custom logo if set
-  loadNavLogo('navLogoIcon');
+  if (typeof loadNavLogo === 'function') loadNavLogo('navLogoIcon');
 </script>
